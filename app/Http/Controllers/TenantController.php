@@ -1,0 +1,237 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Tenant;
+use App\Models\Room;
+use App\Models\FinanceTransaction;
+use Illuminate\Http\Request;
+use Carbon\Carbon;
+
+class TenantController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request)
+    {
+        $query = Tenant::with('room');
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        } else {
+            // Default show active tenants
+            $query->where('status', 'aktif');
+        }
+
+        $tenants = $query->latest()->paginate(10)->withQueryString();
+
+        return view('tenants.index', compact('tenants'));
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        // Only vacant rooms can be assigned
+        $rooms = Room::where('status', 'kosong')->orderBy('room_number')->get();
+        return view('tenants.create', compact('rooms'));
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'phone' => 'required|string|max:20',
+            'room_id' => 'required|exists:rooms,id',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after:start_date',
+            'monthly_fee' => 'required|numeric|min:0',
+            'deposit' => 'required|numeric|min:0',
+            'notes' => 'nullable|string',
+        ]);
+
+        $room = Room::findOrFail($validated['room_id']);
+
+        if ($room->status !== 'kosong') {
+            return redirect()->back()->withInput()->with('error', 'Kamar ini sedang tidak tersedia (terisi atau maintenance).');
+        }
+
+        // 1. Create tenant
+        $tenant = Tenant::create(array_merge($validated, ['status' => 'aktif']));
+
+        // 2. Set room to terisi
+        $room->update(['status' => 'terisi']);
+
+        // 3. Log initial financial inflow (Rent + Deposit)
+        $firstMonthRent = (float)$validated['monthly_fee'];
+        $deposit = (float)$validated['deposit'];
+        $totalInitial = $firstMonthRent + $deposit;
+
+        if ($totalInitial > 0) {
+            FinanceTransaction::create([
+                'type' => 'income',
+                'category' => 'kost',
+                'date' => Carbon::parse($validated['start_date']),
+                'amount' => $totalInitial,
+                'payment_method' => 'transfer', // default transfer for security/proof
+                'notes' => "Pembayaran awal sewa & deposit Kamar {$room->room_number} - Penghuni: {$validated['name']}",
+                'sourceable_type' => Tenant::class,
+                'sourceable_id' => $tenant->id,
+            ]);
+        }
+
+        return redirect()->route('tenants.index')->with('success', "Penghuni {$validated['name']} berhasil check-in di Kamar {$room->room_number}.");
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(Tenant $tenant)
+    {
+        return redirect()->route('tenants.index');
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Tenant $tenant)
+    {
+        // Load vacant rooms OR the tenant's current room
+        $rooms = Room::where('status', 'kosong')
+            ->orWhere('id', $tenant->room_id)
+            ->orderBy('room_number')
+            ->get();
+            
+        return view('tenants.edit', compact('tenant', 'rooms'));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, Tenant $tenant)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'phone' => 'required|string|max:20',
+            'room_id' => 'required|exists:rooms,id',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after:start_date',
+            'monthly_fee' => 'required|numeric|min:0',
+            'deposit' => 'required|numeric|min:0',
+            'notes' => 'nullable|string',
+            'status' => 'required|string|in:aktif,selesai',
+        ]);
+
+        $oldRoomId = $tenant->room_id;
+        $newRoomId = $validated['room_id'];
+        $oldStatus = $tenant->status;
+        $newStatus = $validated['status'];
+
+        // Room changes handling
+        if ($oldRoomId != $newRoomId) {
+            $newRoom = Room::findOrFail($newRoomId);
+            if ($newRoom->status !== 'kosong') {
+                return redirect()->back()->withInput()->with('error', 'Kamar baru pilihan Anda sedang terisi.');
+            }
+            
+            // Release old room
+            Room::findOrFail($oldRoomId)->update(['status' => 'kosong']);
+            // Occupy new room
+            $newRoom->update(['status' => 'terisi']);
+        }
+
+        // Status change handling (check out)
+        if ($oldStatus === 'aktif' && $newStatus === 'selesai') {
+            // Tenant leaves, room becomes vacant
+            Room::findOrFail($newRoomId)->update(['status' => 'kosong']);
+        } elseif ($oldStatus === 'selesai' && $newStatus === 'aktif') {
+            // Re-activate tenant, room becomes occupied
+            $room = Room::findOrFail($newRoomId);
+            if ($room->status !== 'kosong') {
+                return redirect()->back()->withInput()->with('error', 'Kamar tidak dapat diaktifkan kembali karena sudah ditempati.');
+            }
+            $room->update(['status' => 'terisi']);
+        }
+
+        $tenant->update($validated);
+
+        return redirect()->route('tenants.index')->with('success', "Data penghuni {$tenant->name} berhasil diperbarui.");
+    }
+
+    /**
+     * Remove (Check-out) the specified resource from storage.
+     */
+    public function destroy(Tenant $tenant)
+    {
+        if (auth()->user()->isStaff()) {
+            return redirect()->back()->with('error', 'Akses Ditolak: Staff tidak diperbolehkan menghapus data penghuni kost.');
+        }
+
+        // Instead of hard deleting, we check out the tenant
+        if ($tenant->status === 'aktif') {
+            $tenant->update(['status' => 'selesai']);
+            $tenant->room()->update(['status' => 'kosong']);
+            return redirect()->route('tenants.index')->with('success', "Penghuni {$tenant->name} berhasil di-Check Out. Kamar {$tenant->room->room_number} kini kosong.");
+        }
+
+        // Hard delete completed records only
+        $tenant->delete();
+        return redirect()->route('tenants.index', ['status' => 'selesai'])->with('success', "Rekaman lama penghuni {$tenant->name} dihapus.");
+    }
+
+    /**
+     * Renew / Extend Tenant Contract (Quick action for admin/owner).
+     */
+    public function renew(Request $request, Tenant $tenant)
+    {
+        if (auth()->user()->isStaff()) {
+            return redirect()->back()->with('error', 'Akses Ditolak: Staff tidak diperbolehkan memperpanjang kontrak.');
+        }
+
+        $validated = $request->validate([
+            'duration_months' => 'required|integer|min:1|max:60',
+            'payment_type' => 'required|string|in:dimuka,dibelakang',
+        ]);
+
+        $months = (int)$validated['duration_months'];
+        $paymentType = $validated['payment_type'];
+
+        // If the contract is already expired, starting date is today. Otherwise, add to current end date.
+        $baseDate = $tenant->end_date->isPast() ? \Carbon\Carbon::now() : $tenant->end_date;
+        $newEndDate = $baseDate->copy()->addMonths($months);
+
+        // Update tenant
+        $tenant->update([
+            'end_date' => $newEndDate,
+            'payment_type' => $paymentType,
+            'status' => 'aktif',
+        ]);
+
+        // Keep room marked as occupied (terisi)
+        $tenant->room()->update(['status' => 'terisi']);
+
+        // Calculate amount to be billed
+        $rentAmount = $tenant->monthly_fee * $months;
+
+        // If payment type is 'dimuka' (paid in advance), log a Finance Transaction!
+        if ($paymentType === 'dimuka') {
+            $transaction = \App\Models\FinanceTransaction::create([
+                'type' => 'income',
+                'category' => 'kost',
+                'date' => \Carbon\Carbon::now(),
+                'amount' => $rentAmount,
+                'payment_method' => 'cash',
+                'notes' => "Perpanjangan sewa Kost Kamar {$tenant->room->room_number} - {$tenant->name} ({$months} bulan)",
+            ]);
+            // Polymorphic link
+            $tenant->transactions()->save($transaction);
+        }
+
+        return redirect()->route('tenants.index')->with('success', "Kontrak sewa {$tenant->name} berhasil diperpanjang {$months} bulan s/d " . $newEndDate->format('d M Y'));
+    }
+}
