@@ -9,9 +9,10 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Tenant extends Model
 {
+    protected $with = ['customer'];
+
     protected $fillable = [
-        'name',
-        'phone',
+        'customer_id',
         'room_id',
         'start_date',
         'end_date',
@@ -27,6 +28,43 @@ class Tenant extends Model
         'monthly_fee' => 'decimal:2',
         'deposit' => 'decimal:2',
     ];
+
+    protected static function booted()
+    {
+        static::saved(function ($tenant) {
+            if ($tenant->room) {
+                $tenant->room->syncStatus();
+            }
+            if ($tenant->isDirty('room_id')) {
+                $oldRoomId = $tenant->getOriginal('room_id');
+                $oldRoom = Room::find($oldRoomId);
+                if ($oldRoom) {
+                    $oldRoom->syncStatus();
+                }
+            }
+        });
+
+        static::deleted(function ($tenant) {
+            if ($tenant->room) {
+                $tenant->room->syncStatus();
+            }
+        });
+    }
+
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
+    }
+
+    public function getNameAttribute()
+    {
+        return $this->customer?->name;
+    }
+
+    public function getPhoneAttribute()
+    {
+        return $this->customer?->phone;
+    }
 
     public function room(): BelongsTo
     {

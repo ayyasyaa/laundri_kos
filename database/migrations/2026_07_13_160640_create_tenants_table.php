@@ -13,9 +13,8 @@ return new class extends Migration
     {
         Schema::create('tenants', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('phone');
-            $table->foreignId('room_id')->constrained('rooms')->onDelete('cascade');
+            $table->foreignId('customer_id')->constrained('customers')->onDelete('restrict');
+            $table->foreignId('room_id')->constrained('rooms')->onDelete('restrict');
             $table->date('start_date');
             $table->date('end_date');
             $table->decimal('monthly_fee', 10, 2);

@@ -13,4 +13,9 @@ class Customer extends Model
     {
         return $this->hasMany(LaundryOrder::class)->orderBy('created_at', 'desc');
     }
+
+    public function tenants(): HasMany
+    {
+        return $this->hasMany(Tenant::class);
+    }
 }

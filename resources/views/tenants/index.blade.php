@@ -123,6 +123,10 @@
                                         </button>
                                     @endif
 
+                                    <a href="{{ route('tenants.show', $tenant) }}" class="p-2 bg-purple-50 hover:bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:hover:bg-purple-900/50 dark:text-purple-400 rounded-lg transition-colors" title="Riwayat Pembayaran">
+                                        <i data-lucide="history" class="h-4 w-4"></i>
+                                    </a>
+
                                     <a href="https://wa.me/{{ $tenant->phone }}" target="_blank" class="p-2 bg-green-50 hover:bg-green-100 text-green-600 dark:bg-green-900/30 dark:hover:bg-green-900/50 dark:text-green-400 rounded-lg transition-colors" title="Hubungi WhatsApp">
                                         <i data-lucide="message-square" class="h-4 w-4"></i>
                                     </a>

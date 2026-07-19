@@ -23,4 +23,18 @@ class Room extends Model
     {
         return $this->hasOne(Tenant::class)->where('status', 'aktif');
     }
+
+    public function syncStatus(): void
+    {
+        $hasActive = $this->activeTenant()->exists();
+        if ($hasActive) {
+            if ($this->status !== 'terisi') {
+                $this->update(['status' => 'terisi']);
+            }
+        } else {
+            if ($this->status === 'terisi') {
+                $this->update(['status' => 'kosong']);
+            }
+        }
+    }
 }

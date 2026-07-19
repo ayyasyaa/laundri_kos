@@ -66,6 +66,10 @@ class RoomController extends Controller
             return redirect()->route('rooms.index')->with('error', 'Gagal Hapus: Kamar masih terisi oleh penghuni aktif.');
         }
 
+        if ($room->tenants()->exists()) {
+            return redirect()->route('rooms.index')->with('error', "Gagal Hapus: Kamar {$room->room_number} memiliki riwayat sewa.");
+        }
+
         $room->delete();
 
         return redirect()->route('rooms.index')->with('success', "Kamar {$room->room_number} berhasil dihapus.");

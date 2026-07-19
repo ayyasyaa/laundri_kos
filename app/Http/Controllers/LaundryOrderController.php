@@ -208,6 +208,10 @@ class LaundryOrderController extends Controller
             return redirect()->back()->with('error', 'Akses Ditolak: Staff tidak diperbolehkan menghapus data order laundry.');
         }
 
+        if ($order->financeTransactions()->exists()) {
+            return redirect()->route('laundry.orders.index')->with('error', 'Gagal Hapus: Order laundry memiliki riwayat transaksi keuangan.');
+        }
+
         $order->delete();
 
         return redirect()->route('laundry.orders.index')->with('success', 'Order laundry berhasil dihapus.');

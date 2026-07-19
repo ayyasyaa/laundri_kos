@@ -139,8 +139,7 @@ class DatabaseSeeder extends Seeder
         // 6. Tenants
         // Expiring in 7 days (today is 2026-07-13, so end_date: 2026-07-20)
         $t1 = Tenant::create([
-            'name' => 'Siti Rahma',
-            'phone' => '081987654321',
+            'customer_id' => $c2->id,
             'room_id' => $r101->id,
             'start_date' => Carbon::create(2026, 6, 20),
             'end_date' => Carbon::create(2026, 7, 20),
@@ -152,8 +151,7 @@ class DatabaseSeeder extends Seeder
 
         // Expiring in 3 days (end_date: 2026-07-16)
         $t2 = Tenant::create([
-            'name' => 'Andi Wijaya',
-            'phone' => '085678901234',
+            'customer_id' => $c3->id,
             'room_id' => $r102->id,
             'start_date' => Carbon::create(2026, 6, 16),
             'end_date' => Carbon::create(2026, 7, 16),
@@ -163,10 +161,16 @@ class DatabaseSeeder extends Seeder
             'status' => 'aktif',
         ]);
 
-        // Expiring today (end_date: 2026-07-13)
-        $t3 = Tenant::create([
+        // Create Customer for Eko Prasetyo
+        $c_eko = Customer::create([
             'name' => 'Eko Prasetyo',
             'phone' => '087712345678',
+            'notes' => 'Penghuni Kost Kamar 105.',
+        ]);
+
+        // Expiring today (end_date: 2026-07-13)
+        $t3 = Tenant::create([
+            'customer_id' => $c_eko->id,
             'room_id' => $r105->id,
             'start_date' => Carbon::create(2026, 6, 13),
             'end_date' => Carbon::create(2026, 7, 13),
@@ -176,10 +180,16 @@ class DatabaseSeeder extends Seeder
             'status' => 'aktif',
         ]);
 
-        // Finished tenant
-        $t4 = Tenant::create([
+        // Create Customer for Dewi Sartika
+        $c_dewi = Customer::create([
             'name' => 'Dewi Sartika',
             'phone' => '089988887777',
+            'notes' => 'Mantan Penghuni Kost Kamar 103.',
+        ]);
+
+        // Finished tenant
+        $t4 = Tenant::create([
+            'customer_id' => $c_dewi->id,
             'room_id' => $r103->id,
             'start_date' => Carbon::create(2026, 1, 1),
             'end_date' => Carbon::create(2026, 6, 1),

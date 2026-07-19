@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('laundry_orders', function (Blueprint $table) {
             $table->id();
             $table->string('order_number')->unique();
-            $table->foreignId('customer_id')->constrained()->onDelete('cascade');
-            $table->foreignId('service_id')->constrained('laundry_services')->onDelete('cascade');
+            $table->foreignId('customer_id')->constrained()->onDelete('restrict');
+            $table->foreignId('service_id')->constrained('laundry_services')->onDelete('restrict');
             $table->decimal('weight', 8, 2);
             $table->decimal('price', 10, 2);
             $table->decimal('additional_fees', 10, 2)->default(0.00);

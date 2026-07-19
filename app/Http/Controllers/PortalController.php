@@ -27,8 +27,8 @@ class PortalController extends Controller
 
             // Search for tenant by exact phone number or name
             if (!$laundryOrder) {
-                $tenant = Tenant::with('room')
-                    ->where(function($q) use ($search) {
+                $tenant = Tenant::with(['room', 'customer'])
+                    ->whereHas('customer', function($q) use ($search) {
                         $q->where('phone', $search)
                           ->orWhere('name', 'like', "%{$search}%");
                     })

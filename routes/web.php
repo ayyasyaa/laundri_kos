@@ -54,6 +54,7 @@ Route::middleware(['auth'])->group(function () {
         // Boarding House (Rooms & Tenants)
         Route::resource('rooms', RoomController::class);
         Route::resource('tenants', TenantController::class);
+        Route::get('tenants/{tenant}/renew', [TenantController::class, 'showRenewForm'])->name('tenants.renew.form');
         Route::post('tenants/{tenant}/renew', [TenantController::class, 'renew'])->name('tenants.renew');
 
         // Finance

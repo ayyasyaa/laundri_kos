@@ -99,6 +99,10 @@ class CustomerController extends Controller
             return redirect()->route('customers.index')->with('error', 'Akses Ditolak: Staff tidak diperbolehkan menghapus data master.');
         }
 
+        if ($customer->orders()->exists() || $customer->tenants()->exists()) {
+            return redirect()->route('customers.index')->with('error', 'Gagal Hapus: Customer memiliki riwayat laundry atau sewa kamar.');
+        }
+
         $customer->delete();
 
         return redirect()->route('customers.index')->with('success', 'Customer berhasil dihapus.');

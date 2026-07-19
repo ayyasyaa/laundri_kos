@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Tenant;
 use App\Models\Room;
+use App\Models\Customer;
 use App\Models\FinanceTransaction;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
@@ -61,8 +62,27 @@ class TenantController extends Controller
             return redirect()->back()->withInput()->with('error', 'Kamar ini sedang tidak tersedia (terisi atau maintenance).');
         }
 
+        // Find or create customer by phone
+        $customer = Customer::where('phone', $validated['phone'])->first();
+        if ($customer) {
+            $customer->update(['name' => $validated['name']]);
+        } else {
+            $customer = Customer::create([
+                'name' => $validated['name'],
+                'phone' => $validated['phone'],
+            ]);
+        }
+
+        // Prepare tenant data
+        $tenantData = array_merge($validated, [
+            'customer_id' => $customer->id,
+            'status' => 'aktif'
+        ]);
+        unset($tenantData['name']);
+        unset($tenantData['phone']);
+
         // 1. Create tenant
-        $tenant = Tenant::create(array_merge($validated, ['status' => 'aktif']));
+        $tenant = Tenant::create($tenantData);
 
         // 2. Set room to terisi
         $room->update(['status' => 'terisi']);
@@ -93,7 +113,16 @@ class TenantController extends Controller
      */
     public function show(Tenant $tenant)
     {
-        return redirect()->route('tenants.index');
+        $transactions = $tenant->financeTransactions()
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        $totalPaid = $tenant->financeTransactions()
+            ->where('type', 'income')
+            ->sum('amount');
+
+        return view('tenants.show', compact('tenant', 'transactions', 'totalPaid'));
     }
 
     /**
@@ -158,7 +187,19 @@ class TenantController extends Controller
             $room->update(['status' => 'terisi']);
         }
 
-        $tenant->update($validated);
+        // Update linked customer details
+        if ($tenant->customer) {
+            $tenant->customer->update([
+                'name' => $validated['name'],
+                'phone' => $validated['phone'],
+            ]);
+        }
+
+        $tenantData = $validated;
+        unset($tenantData['name']);
+        unset($tenantData['phone']);
+
+        $tenant->update($tenantData);
 
         return redirect()->route('tenants.index')->with('success', "Data penghuni {$tenant->name} berhasil diperbarui.");
     }
@@ -179,9 +220,25 @@ class TenantController extends Controller
             return redirect()->route('tenants.index')->with('success', "Penghuni {$tenant->name} berhasil di-Check Out. Kamar {$tenant->room->room_number} kini kosong.");
         }
 
-        // Hard delete completed records only
+        // Hard delete completed records only (if they don't have finance transactions)
+        if ($tenant->financeTransactions()->exists()) {
+            return redirect()->route('tenants.index', ['status' => 'selesai'])->with('error', "Gagal Hapus: Penghuni {$tenant->name} memiliki riwayat transaksi keuangan.");
+        }
+
         $tenant->delete();
         return redirect()->route('tenants.index', ['status' => 'selesai'])->with('success', "Rekaman lama penghuni {$tenant->name} dihapus.");
+    }
+
+    /**
+     * Show the form to renew / extend Tenant Contract.
+     */
+    public function showRenewForm(Tenant $tenant)
+    {
+        if (auth()->user()->isStaff()) {
+            return redirect()->back()->with('error', 'Akses Ditolak: Staff tidak diperbolehkan memperpanjang kontrak.');
+        }
+
+        return view('tenants.renew', compact('tenant'));
     }
 
     /**
@@ -229,7 +286,7 @@ class TenantController extends Controller
                 'notes' => "Perpanjangan sewa Kost Kamar {$tenant->room->room_number} - {$tenant->name} ({$months} bulan)",
             ]);
             // Polymorphic link
-            $tenant->transactions()->save($transaction);
+            $tenant->financeTransactions()->save($transaction);
         }
 
         return redirect()->route('tenants.index')->with('success', "Kontrak sewa {$tenant->name} berhasil diperpanjang {$months} bulan s/d " . $newEndDate->format('d M Y'));

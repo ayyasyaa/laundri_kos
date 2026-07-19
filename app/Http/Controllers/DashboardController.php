@@ -106,6 +106,25 @@ class DashboardController extends Controller
             $weeklyOrdersValues[] = $found ? $found->total : 0;
         }
 
+        $newOrders = collect();
+        $processingOrders = collect();
+        $completedOrders = collect();
+
+        if (auth()->user()->isStaff()) {
+            $newOrders = LaundryOrder::with(['customer', 'service'])
+                ->where('status', 'baru')
+                ->latest()
+                ->get();
+            $processingOrders = LaundryOrder::with(['customer', 'service'])
+                ->where('status', 'proses')
+                ->latest()
+                ->get();
+            $completedOrders = LaundryOrder::with(['customer', 'service'])
+                ->where('status', 'selesai')
+                ->latest()
+                ->get();
+        }
+
         return view('dashboard', compact(
             'totalLaundryToday',
             'laundryProcesses',
@@ -124,7 +143,10 @@ class DashboardController extends Controller
             'monthlyIncomeLabels',
             'monthlyIncomeValues',
             'weeklyOrdersLabels',
-            'weeklyOrdersValues'
+            'weeklyOrdersValues',
+            'newOrders',
+            'processingOrders',
+            'completedOrders'
         ));
     }
 }
