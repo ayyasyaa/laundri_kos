@@ -56,6 +56,7 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('tenants', TenantController::class);
         Route::get('tenants/{tenant}/renew', [TenantController::class, 'showRenewForm'])->name('tenants.renew.form');
         Route::post('tenants/{tenant}/renew', [TenantController::class, 'renew'])->name('tenants.renew');
+        Route::post('tenants/payments/{payment}/pay', [TenantController::class, 'payPayment'])->name('tenants.payments.pay');
 
         // Finance
         Route::get('finance', [FinanceController::class, 'index'])->name('finance.index');

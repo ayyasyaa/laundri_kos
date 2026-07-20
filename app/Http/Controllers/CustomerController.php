@@ -61,7 +61,34 @@ class CustomerController extends Controller
         $unpaidTotal = $customer->orders()->whereIn('payment_status', ['belum_bayar', 'dp'])->get()->sum(fn($o) => $o->total_price - $o->paid_amount);
         $activeOrdersCount = $customer->orders()->whereIn('status', ['baru', 'proses', 'selesai'])->count();
         
-        return view('customers.show', compact('customer', 'orders', 'unpaidTotal', 'activeOrdersCount'));
+        // Kost Integration
+        $activeTenant = $customer->tenants()->where('status', 'aktif')->with('room')->first();
+        $tenants = $customer->tenants()->with('room')->latest()->get();
+        
+        $unpaidRentTotal = 0;
+        $tenantPayments = collect();
+        if ($customer->tenants()->exists()) {
+            $tenantIds = $customer->tenants()->pluck('id');
+            $unpaidRentTotal = \App\Models\TenantPayment::whereIn('tenant_id', $tenantIds)
+                ->where('payment_status', 'belum_bayar')
+                ->sum('amount');
+                
+            $tenantPayments = \App\Models\TenantPayment::whereIn('tenant_id', $tenantIds)
+                ->with('tenant.room')
+                ->latest()
+                ->get();
+        }
+        
+        return view('customers.show', compact(
+            'customer', 
+            'orders', 
+            'unpaidTotal', 
+            'activeOrdersCount',
+            'activeTenant',
+            'tenants',
+            'unpaidRentTotal',
+            'tenantPayments'
+        ));
     }
 
     /**

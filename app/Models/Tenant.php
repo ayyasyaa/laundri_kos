@@ -18,6 +18,7 @@ class Tenant extends Model
         'end_date',
         'monthly_fee',
         'deposit',
+        'payment_type',
         'notes',
         'status'
     ];
@@ -74,6 +75,11 @@ class Tenant extends Model
     public function financeTransactions(): MorphMany
     {
         return $this->morphMany(FinanceTransaction::class, 'sourceable');
+    }
+
+    public function tenantPayments()
+    {
+        return $this->hasMany(TenantPayment::class)->orderBy('created_at', 'desc');
     }
 
     /**

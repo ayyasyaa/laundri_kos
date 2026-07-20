@@ -108,7 +108,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <!-- Deposit -->
                 <div>
                     <label for="deposit" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Uang Deposit Awal (Rp)</label>
@@ -123,6 +123,17 @@
                                min="0"
                                class="block w-full pl-10 pr-4 py-2.5 text-sm bg-gray-50 dark:bg-gray-900 border border-gray-250 dark:border-gray-750 rounded-xl focus:ring-blue-500 focus:border-blue-550 text-gray-900 dark:text-white">
                     </div>
+                </div>
+
+                <!-- Payment Type -->
+                <div>
+                    <label for="payment_type" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Tipe Pembayaran</label>
+                    <select name="payment_type" 
+                            id="payment_type" 
+                            class="mt-1.5 block w-full px-4 py-2.5 text-sm bg-gray-50 dark:bg-gray-900 border border-gray-250 dark:border-gray-750 rounded-xl focus:ring-blue-500 focus:border-blue-550 text-gray-900 dark:text-white">
+                        <option value="dimuka" {{ old('payment_type', $tenant->payment_type) === 'dimuka' ? 'selected' : '' }}>Bayar Di Muka</option>
+                        <option value="dibelakang" {{ old('payment_type', $tenant->payment_type) === 'dibelakang' ? 'selected' : '' }}>Bayar Di Belakang</option>
+                    </select>
                 </div>
 
                 <!-- Status -->

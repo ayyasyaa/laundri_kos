@@ -124,18 +124,31 @@
                                min="0"
                                class="block w-full pl-10 pr-4 py-2.5 text-sm bg-gray-50 dark:bg-gray-900 border border-gray-250 dark:border-gray-750 rounded-xl focus:ring-blue-500 focus:border-blue-550 text-gray-900 dark:text-white">
                     </div>
-                    <span class="block text-xs text-gray-500 mt-1">Uang jaminan, dicatat sebagai pendapatan & kas kost sementara.</span>
+                    <span class="block text-xs text-gray-500 mt-1">Uang jaminan kost awal.</span>
                 </div>
 
-                <!-- Notes -->
+                <!-- Payment Type -->
                 <div>
-                    <label for="notes" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Catatan Sewa</label>
-                    <textarea name="notes" 
-                              id="notes" 
-                              rows="2" 
-                              placeholder="Keterangan tambahan sewa kamar..."
-                              class="mt-1.5 block w-full px-4 py-2.5 text-sm bg-gray-50 dark:bg-gray-900 border border-gray-250 dark:border-gray-750 rounded-xl focus:ring-blue-550 focus:border-blue-550 text-gray-900 dark:text-white">{{ old('notes') }}</textarea>
+                    <label for="payment_type" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Tipe Pembayaran Sewa Awal <span class="text-red-500">*</span></label>
+                    <select name="payment_type" 
+                            id="payment_type" 
+                            required 
+                            class="mt-1.5 block w-full px-4 py-2.5 text-sm bg-gray-50 dark:bg-gray-900 border border-gray-250 dark:border-gray-750 rounded-xl focus:ring-blue-500 focus:border-blue-550 text-gray-900 dark:text-white">
+                        <option value="dimuka" {{ old('payment_type') === 'dimuka' ? 'selected' : '' }}>Bayar Di Muka (Langsung Kas Masuk)</option>
+                        <option value="dibelakang" {{ old('payment_type') === 'dibelakang' ? 'selected' : '' }}>Bayar Di Belakang (Tempo / Belum Bayar)</option>
+                    </select>
+                    <span class="block text-xs text-gray-500 mt-1">Tentukan kapan penyewa membayar biaya awal ini.</span>
                 </div>
+            </div>
+
+            <!-- Notes -->
+            <div>
+                <label for="notes" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Catatan Sewa</label>
+                <textarea name="notes" 
+                          id="notes" 
+                          rows="2" 
+                          placeholder="Keterangan tambahan sewa kamar..."
+                          class="mt-1.5 block w-full px-4 py-2.5 text-sm bg-gray-50 dark:bg-gray-900 border border-gray-250 dark:border-gray-750 rounded-xl focus:ring-blue-550 focus:border-blue-550 text-gray-900 dark:text-white">{{ old('notes') }}</textarea>
             </div>
 
             <!-- Action Buttons -->

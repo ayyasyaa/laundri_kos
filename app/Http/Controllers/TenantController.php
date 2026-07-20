@@ -6,6 +6,7 @@ use App\Models\Tenant;
 use App\Models\Room;
 use App\Models\Customer;
 use App\Models\FinanceTransaction;
+use App\Models\TenantPayment;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -53,13 +54,14 @@ class TenantController extends Controller
             'end_date' => 'required|date|after:start_date',
             'monthly_fee' => 'required|numeric|min:0',
             'deposit' => 'required|numeric|min:0',
+            'payment_type' => 'required|string|in:dimuka,dibelakang',
             'notes' => 'nullable|string',
         ]);
 
         $room = Room::findOrFail($validated['room_id']);
 
         if ($room->status !== 'kosong') {
-            return redirect()->back()->withInput()->with('error', 'Kamar ini sedang tidak tersedia (terisi atau maintenance).');
+            return redirect()->back()->withInput()->with('error', 'Kamar ini sedang tidak tersedia (terisi or maintenance).');
         }
 
         // Find or create customer by phone
@@ -87,22 +89,39 @@ class TenantController extends Controller
         // 2. Set room to terisi
         $room->update(['status' => 'terisi']);
 
-        // 3. Log initial financial inflow (Rent + Deposit)
+        // 3. Create Tenant Payment
         $firstMonthRent = (float)$validated['monthly_fee'];
         $deposit = (float)$validated['deposit'];
         $totalInitial = $firstMonthRent + $deposit;
 
+        $paymentStatus = $validated['payment_type'] === 'dimuka' ? 'lunas' : 'belum_bayar';
+        $paidAt = $validated['payment_type'] === 'dimuka' ? Carbon::parse($validated['start_date']) : null;
+        $paymentMethod = $validated['payment_type'] === 'dimuka' ? 'transfer' : null;
+
         if ($totalInitial > 0) {
-            FinanceTransaction::create([
-                'type' => 'income',
-                'category' => 'kost',
-                'date' => Carbon::parse($validated['start_date']),
+            $payment = TenantPayment::create([
+                'tenant_id' => $tenant->id,
                 'amount' => $totalInitial,
-                'payment_method' => 'transfer', // default transfer for security/proof
+                'payment_type' => $validated['payment_type'],
+                'payment_status' => $paymentStatus,
+                'payment_method' => $paymentMethod,
+                'paid_at' => $paidAt,
                 'notes' => "Pembayaran awal sewa & deposit Kamar {$room->room_number} - Penghuni: {$validated['name']}",
-                'sourceable_type' => Tenant::class,
-                'sourceable_id' => $tenant->id,
             ]);
+
+            // 4. Log financial inflow if paid in advance
+            if ($validated['payment_type'] === 'dimuka') {
+                FinanceTransaction::create([
+                    'type' => 'income',
+                    'category' => 'kost',
+                    'date' => Carbon::parse($validated['start_date']),
+                    'amount' => $totalInitial,
+                    'payment_method' => 'transfer',
+                    'notes' => "Pembayaran awal sewa & deposit Kamar {$room->room_number} - Penghuni: {$validated['name']} (Tagihan ID: {$payment->id})",
+                    'sourceable_type' => Tenant::class,
+                    'sourceable_id' => $tenant->id,
+                ]);
+            }
         }
 
         return redirect()->route('tenants.index')->with('success', "Penghuni {$validated['name']} berhasil check-in di Kamar {$room->room_number}.");
@@ -113,6 +132,8 @@ class TenantController extends Controller
      */
     public function show(Tenant $tenant)
     {
+        $tenantPayments = $tenant->tenantPayments;
+
         $transactions = $tenant->financeTransactions()
             ->orderBy('date', 'desc')
             ->orderBy('created_at', 'desc')
@@ -122,7 +143,7 @@ class TenantController extends Controller
             ->where('type', 'income')
             ->sum('amount');
 
-        return view('tenants.show', compact('tenant', 'transactions', 'totalPaid'));
+        return view('tenants.show', compact('tenant', 'transactions', 'totalPaid', 'tenantPayments'));
     }
 
     /**
@@ -152,6 +173,7 @@ class TenantController extends Controller
             'end_date' => 'required|date|after:start_date',
             'monthly_fee' => 'required|numeric|min:0',
             'deposit' => 'required|numeric|min:0',
+            'payment_type' => 'required|string|in:dimuka,dibelakang',
             'notes' => 'nullable|string',
             'status' => 'required|string|in:aktif,selesai',
         ]);
@@ -275,6 +297,20 @@ class TenantController extends Controller
         // Calculate amount to be billed
         $rentAmount = $tenant->monthly_fee * $months;
 
+        $paymentStatus = $paymentType === 'dimuka' ? 'lunas' : 'belum_bayar';
+        $paidAt = $paymentType === 'dimuka' ? \Carbon\Carbon::now() : null;
+        $paymentMethod = $paymentType === 'dimuka' ? 'cash' : null;
+
+        $payment = TenantPayment::create([
+            'tenant_id' => $tenant->id,
+            'amount' => $rentAmount,
+            'payment_type' => $paymentType,
+            'payment_status' => $paymentStatus,
+            'payment_method' => $paymentMethod,
+            'paid_at' => $paidAt,
+            'notes' => "Perpanjangan sewa Kost Kamar {$tenant->room->room_number} - {$tenant->name} ({$months} bulan)",
+        ]);
+
         // If payment type is 'dimuka' (paid in advance), log a Finance Transaction!
         if ($paymentType === 'dimuka') {
             $transaction = \App\Models\FinanceTransaction::create([
@@ -283,12 +319,49 @@ class TenantController extends Controller
                 'date' => \Carbon\Carbon::now(),
                 'amount' => $rentAmount,
                 'payment_method' => 'cash',
-                'notes' => "Perpanjangan sewa Kost Kamar {$tenant->room->room_number} - {$tenant->name} ({$months} bulan)",
+                'notes' => "Perpanjangan sewa Kost Kamar {$tenant->room->room_number} - {$tenant->name} ({$months} bulan) (Tagihan ID: {$payment->id})",
             ]);
             // Polymorphic link
             $tenant->financeTransactions()->save($transaction);
         }
 
         return redirect()->route('tenants.index')->with('success', "Kontrak sewa {$tenant->name} berhasil diperpanjang {$months} bulan s/d " . $newEndDate->format('d M Y'));
+    }
+
+    /**
+     * Pay / settle a specific tenant payment.
+     */
+    public function payPayment(Request $request, TenantPayment $payment)
+    {
+        $validated = $request->validate([
+            'payment_method' => 'required|string|in:cash,transfer,ewallet',
+        ]);
+
+        if ($payment->payment_status === 'lunas') {
+            return redirect()->back()->with('error', 'Tagihan ini sudah lunas.');
+        }
+
+        $tenant = $payment->tenant;
+
+        // Update payment status
+        $payment->update([
+            'payment_status' => 'lunas',
+            'payment_method' => $validated['payment_method'],
+            'paid_at' => \Carbon\Carbon::now(),
+        ]);
+
+        // Log financial transaction
+        $transaction = \App\Models\FinanceTransaction::create([
+            'type' => 'income',
+            'category' => 'kost',
+            'date' => \Carbon\Carbon::now(),
+            'amount' => $payment->amount,
+            'payment_method' => $validated['payment_method'],
+            'notes' => "Pelunasan: {$payment->notes} (Tagihan ID: {$payment->id})",
+        ]);
+        // Polymorphic link to tenant
+        $tenant->financeTransactions()->save($transaction);
+
+        return redirect()->back()->with('success', 'Tagihan kost berhasil dilunasi.');
     }
 }
