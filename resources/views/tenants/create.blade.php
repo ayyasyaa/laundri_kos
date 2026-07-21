@@ -168,8 +168,8 @@
     document.addEventListener('alpine:init', () => {
         Alpine.data('tenantCheckinForm', () => ({
             rooms: @json($rooms),
-            selectedRoomId: '{{ request('room_id', '') }}',
-            monthlyFee: 0,
+            selectedRoomId: '{{ old('room_id', request('room_id', '')) }}',
+            monthlyFee: {{ floatval(old('monthly_fee', 0)) }},
             
             init() {
                 this.$watch('selectedRoomId', value => {
@@ -182,7 +182,7 @@
                 });
                 
                 // Trigger initial value
-                if (this.selectedRoomId) {
+                if (this.selectedRoomId && this.monthlyFee === 0) {
                     const room = this.rooms.find(r => r.id == this.selectedRoomId);
                     if (room) this.monthlyFee = parseFloat(room.price);
                 }

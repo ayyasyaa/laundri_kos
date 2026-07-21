@@ -270,13 +270,18 @@
     @else
     <!-- Staff Task Queue Center -->
     <div class="space-y-6">
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
                 <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
                     <i data-lucide="clipboard-list" class="text-blue-600 h-6 w-6"></i>
                     Pusat Antrean Tugas (Task Center)
                 </h3>
                 <p class="text-sm text-gray-500 dark:text-gray-400">Kelola dan selesaikan seluruh cucian masuk secara tepat waktu.</p>
+            </div>
+            <div>
+                <a href="{{ route('laundry.orders.create') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-sm transition-all duration-200">
+                    <i data-lucide="plus-circle" class="h-4 w-4"></i> Buat Order Baru
+                </a>
             </div>
         </div>
 

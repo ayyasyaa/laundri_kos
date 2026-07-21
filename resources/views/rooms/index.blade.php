@@ -159,11 +159,15 @@
                     <select name="status" 
                             id="status" 
                             x-model="status"
-                            class="mt-1.5 block w-full px-4 py-2.5 text-sm bg-gray-50 dark:bg-gray-900 border border-gray-250 dark:border-gray-750 rounded-xl focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-white">
+                            :disabled="status === 'terisi'"
+                            class="mt-1.5 block w-full px-4 py-2.5 text-sm bg-gray-50 dark:bg-gray-900 border border-gray-250 dark:border-gray-750 rounded-xl focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-white disabled:opacity-60 disabled:cursor-not-allowed">
                         <option value="kosong">Kosong (Tersedia)</option>
-                        <option value="terisi">Terisi (Penyewa Aktif)</option>
                         <option value="maintenance">Maintenance (Perbaikan)</option>
+                        <option value="terisi" x-show="status === 'terisi'">Terisi (Penyewa Aktif)</option>
                     </select>
+                    <p class="text-[10px] text-amber-600 dark:text-amber-400 mt-1 font-semibold" x-show="status === 'terisi'">
+                        * Status kamar terisi hanya dapat diubah melalui check-out Penghuni.
+                    </p>
                 </div>
 
                 <!-- Actions -->
