@@ -123,7 +123,7 @@ class LaundryOrderController extends Controller
             'paid_amount' => $paidAmount,
             'payment_status' => $paymentStatus,
             'payment_method' => $validated['payment_method'] ?: null,
-            'status' => 'baru',
+            'status' => in_array($validated['delivery_type'], ['pickup', 'pickup_delivery']) ? 'pending' : 'baru',
             'delivery_type' => $validated['delivery_type'],
             'estimation_date' => $estimationDate,
             'notes' => $validated['notes'],
@@ -223,16 +223,31 @@ class LaundryOrderController extends Controller
     public function updateStatus(Request $request, LaundryOrder $order)
     {
         $request->validate([
-            'status' => 'required|string|in:baru,proses,selesai,diambil_diantar',
+            'status' => 'required|string|in:pending,baru,sedang_diambil,proses,selesai,sedang_dikirim,diambil_diantar',
         ]);
 
         $newStatus = $request->input('status');
         
         $order->update(['status' => $newStatus]);
 
-        // If status becomes diambil_diantar, update associated delivery tasks to completed
-        if ($newStatus === 'diambil_diantar') {
-            $order->deliveries()->update(['status' => 'completed']);
+        // Two-way synchronization: If order status changes, update the delivery tasks accordingly
+        if ($newStatus === 'pending') {
+            // Set associated pickup task back to pending if needed
+            $order->deliveries()->where('type', 'pickup')->update(['status' => 'pending']);
+        } elseif ($newStatus === 'sedang_diambil') {
+            // Update associated pickup task to processing
+            $order->deliveries()->where('type', 'pickup')->where('status', '!=', 'completed')->update(['status' => 'processing']);
+        } elseif (in_array($newStatus, ['baru', 'proses', 'selesai'])) {
+            // If order has progressed to baru (arrived at store), proses, or selesai, the pickup must be completed!
+            $order->deliveries()->where('type', 'pickup')->where('status', '!=', 'completed')->update(['status' => 'completed']);
+        }
+        
+        if ($newStatus === 'sedang_dikirim') {
+            // Update associated delivery task to processing
+            $order->deliveries()->where('type', 'delivery')->where('status', '!=', 'completed')->update(['status' => 'processing']);
+        } elseif ($newStatus === 'diambil_diantar') {
+            // If order is completed/delivered, both pickup and delivery should be completed
+            $order->deliveries()->where('status', '!=', 'completed')->update(['status' => 'completed']);
         }
 
         return redirect()->back()->with('success', "Status order {$order->order_number} berhasil diperbarui menjadi " . strtoupper($newStatus));

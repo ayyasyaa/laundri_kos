@@ -12,15 +12,14 @@ use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\PortalController;
+use App\Http\Controllers\LandingPageController;
 use Illuminate\Support\Facades\Route;
 
 // Public Customer Tracking Portal
 Route::get('/portal', [PortalController::class, 'index'])->name('portal.index');
 
-// Redirect root to dashboard
-Route::get('/', function () {
-    return redirect()->route('dashboard');
-});
+// Public Landing Page
+Route::get('/', [LandingPageController::class, 'index'])->name('landing');
 
 Route::middleware(['auth'])->group(function () {
     // Dashboard

@@ -19,7 +19,7 @@ class DashboardController extends Controller
         // 1. KPI Cards
         $totalLaundryToday = LaundryOrder::whereDate('created_at', $today)->count();
         $laundryProcesses = LaundryOrder::where('status', 'proses')->count();
-        $laundryCompleted = LaundryOrder::where('status', 'selesai')->count();
+        $laundryCompleted = LaundryOrder::whereIn('status', ['selesai', 'sedang_dikirim'])->count();
         
         // Revenue calculations
         $revenueLaundry = FinanceTransaction::where('type', 'income')
@@ -36,9 +36,9 @@ class DashboardController extends Controller
         $roomsEmpty = Room::where('status', 'kosong')->count();
 
         // 2. Today's Tasks & Alerts
-        // Laundry: Siap Diantar (status: selesai, delivery_type: delivery or pickup_delivery, not delivered yet)
+        // Laundry: Siap Diantar (status: selesai or sedang_dikirim, delivery_type: delivery or pickup_delivery, not delivered yet)
         $readyToDeliver = LaundryOrder::with('customer')
-            ->where('status', 'selesai')
+            ->whereIn('status', ['selesai', 'sedang_dikirim'])
             ->whereIn('delivery_type', ['delivery', 'pickup_delivery'])
             ->get();
             
@@ -111,16 +111,16 @@ class DashboardController extends Controller
         $completedOrders = collect();
 
         if (auth()->user()->isStaff()) {
-            $newOrders = LaundryOrder::with(['customer', 'service'])
-                ->where('status', 'baru')
+            $newOrders = LaundryOrder::with(['customer', 'service', 'deliveries'])
+                ->whereIn('status', ['baru', 'sedang_diambil'])
                 ->latest()
                 ->get();
             $processingOrders = LaundryOrder::with(['customer', 'service'])
                 ->where('status', 'proses')
                 ->latest()
                 ->get();
-            $completedOrders = LaundryOrder::with(['customer', 'service'])
-                ->where('status', 'selesai')
+            $completedOrders = LaundryOrder::with(['customer', 'service', 'deliveries'])
+                ->whereIn('status', ['selesai', 'sedang_dikirim'])
                 ->latest()
                 ->get();
         }

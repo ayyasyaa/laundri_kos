@@ -95,62 +95,76 @@
                         <!-- Connecting Line -->
                         <div class="absolute left-4 top-4 bottom-4 w-0.5 bg-gray-200 dark:bg-gray-700 sm:left-6 sm:right-6 sm:top-1/2 sm:bottom-auto sm:w-auto sm:h-0.5 sm:-translate-y-1/2 z-0"></div>
                         
-                        <div class="grid grid-cols-1 sm:grid-cols-4 gap-6 relative z-10">
-                            <!-- Step 1 -->
-                            <div class="flex sm:flex-col items-center gap-4 sm:gap-2 text-center">
-                                <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300
-                                    {{ in_array($laundryOrder->status, ['baru', 'proses', 'selesai', 'diambil_diantar']) 
-                                        ? 'bg-blue-600 text-white ring-4 ring-blue-100 dark:ring-blue-900/30' 
-                                        : 'bg-gray-200 text-gray-400 dark:bg-gray-700 dark:text-gray-500' }}">
-                                    <i data-lucide="sparkles" class="h-4 w-4"></i>
+                        @php
+                            $steps = [];
+                            if (in_array($laundryOrder->delivery_type, ['pickup', 'pickup_delivery'])) {
+                                $steps[] = 'pending';
+                                $steps[] = 'sedang_diambil';
+                            }
+                            $steps[] = 'baru';
+                            $steps[] = 'proses';
+                            $steps[] = 'selesai';
+                            if (in_array($laundryOrder->delivery_type, ['delivery', 'pickup_delivery'])) {
+                                $steps[] = 'sedang_dikirim';
+                            }
+                            $steps[] = 'diambil_diantar';
+                            
+                            $activeIdx = array_search($laundryOrder->status, $steps);
+                            $gridCols = count($steps);
+                        @endphp
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-{{ $gridCols }} gap-6 relative z-10">
+                            @foreach($steps as $idx => $step)
+                                <div class="flex sm:flex-col items-center gap-4 sm:gap-2 text-center">
+                                    <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300
+                                        {{ $idx <= $activeIdx 
+                                            ? ($step === 'diambil_diantar' 
+                                                ? 'bg-green-600 text-white ring-4 ring-green-100 dark:ring-green-900/30' 
+                                                : 'bg-blue-600 text-white ring-4 ring-blue-100 dark:ring-blue-900/30') 
+                                            : 'bg-gray-200 text-gray-400 dark:bg-gray-700 dark:text-gray-500' }}">
+                                        @if($step === 'pending')
+                                            <i data-lucide="clock" class="h-4 w-4"></i>
+                                        @elseif($step === 'baru')
+                                            <i data-lucide="sparkles" class="h-4 w-4"></i>
+                                        @elseif($step === 'sedang_diambil')
+                                            <i data-lucide="truck" class="h-4 w-4"></i>
+                                        @elseif($step === 'proses')
+                                            <i data-lucide="loader-2" class="h-4 w-4 {{ $laundryOrder->status === 'proses' ? 'animate-spin' : '' }}"></i>
+                                        @elseif($step === 'selesai')
+                                            <i data-lucide="check" class="h-4 w-4"></i>
+                                        @elseif($step === 'sedang_dikirim')
+                                            <i data-lucide="truck" class="h-4 w-4"></i>
+                                        @else
+                                            <i data-lucide="package-check" class="h-4 w-4"></i>
+                                        @endif
+                                    </div>
+                                    <div>
+                                        <h4 class="text-sm font-bold 
+                                            {{ $idx === $activeIdx 
+                                                ? ($step === 'diambil_diantar' ? 'text-green-600 dark:text-green-400 font-bold' : 'text-blue-600 dark:text-blue-400 font-bold') 
+                                                : ($idx < $activeIdx ? 'text-gray-800 dark:text-gray-300 font-semibold' : 'text-gray-400 dark:text-gray-500') }}">
+                                            @if($step === 'pending') Pending
+                                            @elseif($step === 'baru') Baru
+                                            @elseif($step === 'sedang_diambil') Sedang Diambil
+                                            @elseif($step === 'proses') Diproses
+                                            @elseif($step === 'selesai') Selesai
+                                            @elseif($step === 'sedang_dikirim') Sedang Dikirim
+                                            @else Diserahkan
+                                            @endif
+                                        </h4>
+                                        <p class="text-[10px] text-gray-500 mt-0.5">
+                                            @if($step === 'pending') Menunggu Dijemput
+                                            @elseif($step === 'baru') Tiba di Toko
+                                            @elseif($step === 'sedang_diambil') Kurir Menjemput
+                                            @elseif($step === 'proses') Cuci / Setrika
+                                            @elseif($step === 'selesai') Siap Diambil
+                                            @elseif($step === 'sedang_dikirim') Kurir Mengantar
+                                            @else Sudah Diterima
+                                            @endif
+                                        </p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h4 class="text-sm font-bold text-gray-900 dark:text-white">Diterima</h4>
-                                    <p class="text-[10px] text-gray-500 mt-0.5">Baru Masuk</p>
-                                </div>
-                            </div>
-
-                            <!-- Step 2 -->
-                            <div class="flex sm:flex-col items-center gap-4 sm:gap-2 text-center">
-                                <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300
-                                    {{ in_array($laundryOrder->status, ['proses', 'selesai', 'diambil_diantar']) 
-                                        ? 'bg-blue-600 text-white ring-4 ring-blue-100 dark:ring-blue-900/30' 
-                                        : 'bg-gray-200 text-gray-400 dark:bg-gray-700 dark:text-gray-500' }}">
-                                    <i data-lucide="loader-2" class="h-4 w-4 {{ $laundryOrder->status === 'proses' ? 'animate-spin' : '' }}"></i>
-                                </div>
-                                <div>
-                                    <h4 class="text-sm font-bold {{ in_array($laundryOrder->status, ['proses', 'selesai', 'diambil_diantar']) ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500' }}">Diproses</h4>
-                                    <p class="text-[10px] text-gray-550">Pencucian / Setrika</p>
-                                </div>
-                            </div>
-
-                            <!-- Step 3 -->
-                            <div class="flex sm:flex-col items-center gap-4 sm:gap-2 text-center">
-                                <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300
-                                    {{ in_array($laundryOrder->status, ['selesai', 'diambil_diantar']) 
-                                        ? 'bg-blue-600 text-white ring-4 ring-blue-100 dark:ring-blue-900/30' 
-                                        : 'bg-gray-200 text-gray-400 dark:bg-gray-700 dark:text-gray-500' }}">
-                                    <i data-lucide="check" class="h-4 w-4"></i>
-                                </div>
-                                <div>
-                                    <h4 class="text-sm font-bold {{ in_array($laundryOrder->status, ['selesai', 'diambil_diantar']) ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500' }}">Selesai</h4>
-                                    <p class="text-[10px] text-gray-550">Siap Diambil</p>
-                                </div>
-                            </div>
-
-                            <!-- Step 4 -->
-                            <div class="flex sm:flex-col items-center gap-4 sm:gap-2 text-center">
-                                <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300
-                                    {{ $laundryOrder->status === 'diambil_diantar' 
-                                        ? 'bg-green-600 text-white ring-4 ring-green-100 dark:ring-green-900/30' 
-                                        : 'bg-gray-200 text-gray-400 dark:bg-gray-700 dark:text-gray-500' }}">
-                                    <i data-lucide="package-check" class="h-4 w-4"></i>
-                                </div>
-                                <div>
-                                    <h4 class="text-sm font-bold {{ $laundryOrder->status === 'diambil_diantar' ? 'text-green-600 dark:text-green-400 font-bold' : 'text-gray-400 dark:text-gray-500' }}">Diserahkan</h4>
-                                    <p class="text-[10px] text-gray-550">Sudah di Tangan Anda</p>
-                                </div>
-                            </div>
+                            @endforeach
                         </div>
                     </div>
 

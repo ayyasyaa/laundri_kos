@@ -47,11 +47,20 @@ class DeliveryController extends Controller
                 // If the delivery is completed, the laundry order is also handed over (diambil_diantar)
                 $order->update(['status' => 'diambil_diantar']);
             } elseif ($delivery->type === 'pickup') {
-                // If the pickup is completed, the laundry is now processing (proses)
-                $order->update(['status' => 'proses']);
+                // If the pickup is completed, the laundry is waiting to be processed (baru)
+                $order->update(['status' => 'baru']);
+            }
+        } elseif ($newStatus === 'processing') {
+            if ($delivery->type === 'pickup') {
+                // If pickup is in progress, the laundry order is being picked up (sedang_diambil)
+                $order->update(['status' => 'sedang_diambil']);
+            } elseif ($delivery->type === 'delivery') {
+                // If delivery is in progress, the laundry order is being delivered (sedang_dikirim)
+                $order->update(['status' => 'sedang_dikirim']);
             }
         }
 
         return redirect()->back()->with('success', "Status pengantaran " . strtoupper($delivery->type) . " order {$order->order_number} berhasil diperbarui menjadi " . strtoupper($newStatus));
     }
+
 }

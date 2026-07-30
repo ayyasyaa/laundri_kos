@@ -18,29 +18,51 @@
     <!-- Status Tracking Bar -->
     <div class="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-6 shadow-sm">
         <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-4">Progress Alur Laundry</h3>
-        <div class="grid grid-cols-4 gap-2 text-center text-xs relative">
             @php
-                $steps = ['baru', 'proses', 'selesai', 'diambil_diantar'];
+                $steps = [];
+                if (in_array($order->delivery_type, ['pickup', 'pickup_delivery'])) {
+                    $steps[] = 'pending';
+                    $steps[] = 'sedang_diambil';
+                }
+                $steps[] = 'baru';
+                $steps[] = 'proses';
+                $steps[] = 'selesai';
+                if (in_array($order->delivery_type, ['delivery', 'pickup_delivery'])) {
+                    $steps[] = 'sedang_dikirim';
+                }
+                $steps[] = 'diambil_diantar';
+                
                 $activeIdx = array_search($order->status, $steps);
             @endphp
+        <div class="grid grid-cols-{{ count($steps) }} gap-2 text-center text-xs relative">
             @foreach($steps as $idx => $step)
                 <div class="flex flex-col items-center">
                     <div class="h-8 w-8 rounded-full flex items-center justify-center font-bold text-xs border-2 mb-2 transition-all duration-200 
                         {{ $idx <= $activeIdx 
                             ? 'bg-blue-600 border-blue-600 text-white shadow-sm shadow-blue-500/20' 
                             : 'bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-800 text-gray-400 dark:text-gray-600' }}">
-                        @if($step === 'baru')
+                        @if($step === 'pending')
+                            <i data-lucide="clock" class="h-4 w-4"></i>
+                        @elseif($step === 'baru')
                             <i data-lucide="inbox" class="h-4 w-4"></i>
+                        @elseif($step === 'sedang_diambil')
+                            <i data-lucide="truck" class="h-4 w-4"></i>
                         @elseif($step === 'proses')
                             <i data-lucide="cog" class="h-4 w-4 animate-spin"></i>
                         @elseif($step === 'selesai')
                             <i data-lucide="check-circle-2" class="h-4 w-4"></i>
-                        @else
+                        @elseif($step === 'sedang_dikirim')
                             <i data-lucide="truck" class="h-4 w-4"></i>
+                        @else
+                            <i data-lucide="package-check" class="h-4 w-4"></i>
                         @endif
                     </div>
                     <span class="font-semibold capitalize {{ $idx === $activeIdx ? 'text-blue-600 dark:text-blue-400 font-bold' : 'text-gray-400 dark:text-gray-600' }}">
-                        @if($step === 'diambil_diantar') Diantar/Diambil @else {{ $step }} @endif
+                        @if($step === 'diambil_diantar') Diantar/Diambil 
+                        @elseif($step === 'pending') Pending
+                        @elseif($step === 'sedang_diambil') Sedang Diambil 
+                        @elseif($step === 'sedang_dikirim') Sedang Dikirim 
+                        @else {{ $step }} @endif
                     </span>
                 </div>
             @endforeach
@@ -97,9 +119,12 @@
                         <label for="status" class="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Perbarui Status Laundry</label>
                         <div class="flex gap-2">
                             <select name="status" id="status" class="block w-full px-3 py-2 text-sm bg-gray-50 dark:bg-gray-900 border border-gray-250 dark:border-gray-750 rounded-xl focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-white">
+                                <option value="pending" {{ $order->status === 'pending' ? 'selected' : '' }}>Pending</option>
                                 <option value="baru" {{ $order->status === 'baru' ? 'selected' : '' }}>Baru</option>
+                                <option value="sedang_diambil" {{ $order->status === 'sedang_diambil' ? 'selected' : '' }}>Sedang Diambil</option>
                                 <option value="proses" {{ $order->status === 'proses' ? 'selected' : '' }}>Diproses</option>
                                 <option value="selesai" {{ $order->status === 'selesai' ? 'selected' : '' }}>Selesai</option>
+                                <option value="sedang_dikirim" {{ $order->status === 'sedang_dikirim' ? 'selected' : '' }}>Sedang Dikirim</option>
                                 <option value="diambil_diantar" {{ $order->status === 'diambil_diantar' ? 'selected' : '' }}>Diambil / Diantar</option>
                             </select>
                             <button type="submit" class="px-4 py-2 bg-blue-650 hover:bg-blue-700 text-white font-medium text-xs rounded-xl shadow-sm transition-colors">

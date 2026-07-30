@@ -48,7 +48,7 @@
     </div>
 
     <!-- Printable Report Document Cover (Only visible on print) -->
-    <div class="hidden print:block text-center border-b-2 border-gray-900 pb-5 mb-8">
+    <div class="hidden print:block text-center border-b-2 border-gray-900 pb-5 mb-8 print-document-header">
         <h1 class="text-2xl font-bold uppercase text-gray-900 tracking-wide">{{ \App\Models\Setting::get('business_name', 'Lestari Laundry & Kost') }}</h1>
         <p class="text-xs text-gray-600 mt-1">{{ \App\Models\Setting::get('business_address', 'Jakarta, Indonesia') }}</p>
         <div class="mt-5">
@@ -264,12 +264,22 @@
         </div>
 
         <!-- 3. Laporan Arus Kas Tab -->
-        <div x-show="activeTab === 'cashflow'" class="tab-content-item bg-white dark:bg-gray-800 border border-gray-150 dark:border-gray-700 rounded-2xl p-6 sm:p-8 shadow-sm print:border-gray-300">
+        <div x-show="activeTab === 'cashflow'" id="report-cashflow" class="tab-content-item bg-white dark:bg-gray-800 border border-gray-150 dark:border-gray-700 rounded-2xl p-6 sm:p-8 shadow-sm print:border-gray-300">
             <!-- Accounting Report Header -->
-            <div class="text-center pb-6 border-b border-gray-200 dark:border-gray-700">
-                <h3 class="text-lg font-bold text-gray-900 dark:text-white uppercase tracking-wide">Laporan Arus Kas (Statement of Cash Flows)</h3>
-                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Periode: {{ $months[$month] }} {{ $year }}</p>
-                <p class="text-xs text-gray-450 mt-0.5 italic">Metode Pelaporan: Langsung (Direct Method)</p>
+            <div class="border-b border-gray-200 dark:border-gray-700 pb-6 mb-6">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div class="text-left">
+                        <h2 class="text-lg font-extrabold uppercase text-gray-900 dark:text-white hidden print:block mb-1">{{ \App\Models\Setting::get('business_name', 'Lestari Laundry & Kost') }}</h2>
+                        <h3 class="text-base font-bold text-gray-900 dark:text-white uppercase tracking-wide">Laporan Arus Kas (Statement of Cash Flows)</h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Periode: {{ $months[$month] }} {{ $year }}</p>
+                        <p class="text-[10px] text-gray-450 dark:text-gray-500 mt-0.5 italic">Metode Pelaporan: Langsung (Direct Method)</p>
+                    </div>
+                    <div class="print:hidden flex justify-end">
+                        <button type="button" onclick="printSection('report-cashflow')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 dark:bg-blue-900/35 dark:hover:bg-blue-900/50 dark:text-blue-400 text-xs font-bold rounded-xl transition-all duration-200 shadow-sm">
+                            <i data-lucide="printer" class="h-3.5 w-3.5"></i> Cetak Arus Kas Saja
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <!-- Cash Flow Content -->
@@ -451,23 +461,281 @@
     </div>
 </div>
 
+<!-- DEDICATED FORMAL PRINT REPORT CONTAINER (Hidden on screen, visible only on print) -->
+<div class="hidden print-report-container">
+    <!-- Halaman 1: Kop Surat & Ringkasan -->
+    <div class="print-page">
+        <!-- Kop Surat Laporan -->
+        <div class="text-center border-b-2 border-double border-gray-800 pb-4 mb-6">
+            <h1 class="text-xl font-bold uppercase tracking-wider">{{ \App\Models\Setting::get('business_name', 'Lestari Laundry & Kost') }}</h1>
+            <p class="text-xs text-gray-600 mt-1">{{ \App\Models\Setting::get('business_address', 'Jakarta, Indonesia') }}</p>
+            <p class="text-[10px] text-gray-400 mt-0.5">Telepon: {{ \App\Models\Setting::get('business_phone', '-') }} | Email: {{ \App\Models\Setting::get('business_email', '-') }}</p>
+        </div>
+
+        <!-- Judul Dokumen -->
+        <div class="text-center mb-8">
+            <h2 class="text-base font-bold uppercase tracking-wide">LAPORAN KEUANGAN BULANAN LENGKAP</h2>
+            <p class="text-xs font-semibold text-gray-600 mt-1">Periode: {{ $months[$month] }} {{ $year }}</p>
+            <p class="text-[9px] text-gray-400 mt-0.5">Mata Uang: IDR (Rupiah)</p>
+        </div>
+
+        <!-- 1. Ringkasan Eksekutif -->
+        <div class="mb-8 print-section">
+            <h3 class="text-xs font-bold uppercase tracking-wider border-b border-gray-800 pb-1 mb-3">I. RINGKASAN OPERASIONAL & KEUANGAN</h3>
+            <table class="w-full text-xs text-left border-collapse border border-gray-300">
+                <thead>
+                    <tr class="border-b border-gray-800 font-bold bg-gray-50 text-gray-800">
+                        <th class="py-2 px-3 border border-gray-300">Deskripsi Metrik</th>
+                        <th class="py-2 px-3 text-right border border-gray-300">Nilai / Volume</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    <tr>
+                        <td class="py-2 px-3 text-gray-700 border border-gray-300">Total Pemasukan Kas</td>
+                        <td class="py-2 px-3 text-right font-medium border border-gray-300">Rp {{ number_format($totalIncome, 0, ',', '.') }}</td>
+                    </tr>
+                    <tr>
+                        <td class="py-2 px-3 text-gray-700 border border-gray-300">Total Pengeluaran Kas</td>
+                        <td class="py-2 px-3 text-right font-medium text-red-650 border border-gray-300">Rp {{ number_format($totalExpense, 0, ',', '.') }}</td>
+                    </tr>
+                    <tr class="font-bold bg-gray-50/50">
+                        <td class="py-2 px-3 text-gray-900 border border-gray-300">Laba Bersih Operasional (Profit)</td>
+                        <td class="py-2 px-3 text-right text-green-600 border border-gray-300">Rp {{ number_format($profit, 0, ',', '.') }}</td>
+                    </tr>
+                    <tr>
+                        <td class="py-2 px-3 text-gray-600 border border-gray-300">Volume Cucian Laundry Masuk</td>
+                        <td class="py-2 px-3 text-right border border-gray-300">{{ number_format($laundryTotalWeight, 1, ',', '.') }} kg ({{ $laundryOrdersCount }} Order)</td>
+                    </tr>
+                    <tr>
+                        <td class="py-2 px-3 text-gray-600 border border-gray-300">Okupansi Kamar Kost</td>
+                        <td class="py-2 px-3 text-right border border-gray-300">{{ $occupiedRooms }} / {{ $totalRooms }} Kamar Terisi ({{ $activeTenantsCount }} Penghuni Aktif)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Halaman 2: Laporan Laba Rugi -->
+    <div class="print-page page-break-before">
+        <div class="mb-8 print-section">
+            <h3 class="text-xs font-bold uppercase tracking-wider border-b border-gray-800 pb-1 mb-3">II. LAPORAN LABA RUGI (PROFIT & LOSS STATEMENT)</h3>
+            <table class="w-full text-xs text-left border-collapse table-layout-fixed">
+                <thead>
+                    <tr class="border-b-2 border-gray-850 font-bold bg-gray-50 text-gray-800">
+                        <th class="py-2 px-1 border-b border-gray-300 w-1/2">Deskripsi Akun</th>
+                        <th class="py-2 px-1 text-right border-b border-gray-300 w-1/4">Rincian (IDR)</th>
+                        <th class="py-2 px-1 text-right border-b border-gray-300 w-1/4">Jumlah (IDR)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Pendapatan -->
+                    <tr class="font-bold text-gray-900 bg-gray-50/20">
+                        <td class="py-2 px-1 uppercase" colspan="3">PENDAPATAN</td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="py-1.5 px-4 text-gray-700">Pendapatan Jasa Laundry</td>
+                        <td class="py-1.5 px-1 text-right">Rp {{ number_format($laundryRevenue, 0, ',', '.') }}</td>
+                        <td class="py-1.5 px-1 text-right"></td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="py-1.5 px-4 text-gray-700">Pendapatan Sewa Kamar Kost</td>
+                        <td class="py-1.5 px-1 text-right">Rp {{ number_format($kostRevenue, 0, ',', '.') }}</td>
+                        <td class="py-1.5 px-1 text-right"></td>
+                    </tr>
+                    <tr class="border-b border-gray-200">
+                        <td class="py-1.5 px-4 text-gray-700">Pendapatan Operasional Lainnya</td>
+                        <td class="py-1.5 px-1 text-right">Rp {{ number_format($otherRevenue, 0, ',', '.') }}</td>
+                        <td class="py-1.5 px-1 text-right"></td>
+                    </tr>
+                    <tr class="font-bold border-b border-gray-400 bg-gray-50/40 text-gray-950">
+                        <td class="py-2 px-1 uppercase pl-4">Total Pendapatan (A)</td>
+                        <td class="py-2 px-1 text-right"></td>
+                        <td class="py-2 px-1 text-right">Rp {{ number_format($totalIncome, 0, ',', '.') }}</td>
+                    </tr>
+
+                    <!-- Beban -->
+                    <tr class="font-bold text-gray-900 bg-gray-50/20">
+                        <td class="py-2 px-1 uppercase pt-4" colspan="3">BEBAN OPERASIONAL</td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="py-1.5 px-4 text-gray-700">Beban Listrik</td>
+                        <td class="py-1.5 px-1 text-right">Rp {{ number_format($expenses['listrik'], 0, ',', '.') }}</td>
+                        <td class="py-1.5 px-1 text-right"></td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="py-1.5 px-4 text-gray-700">Beban Air / PDAM</td>
+                        <td class="py-1.5 px-1 text-right">Rp {{ number_format($expenses['air'], 0, ',', '.') }}</td>
+                        <td class="py-1.5 px-1 text-right"></td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="py-1.5 px-4 text-gray-700">Beban Bahan Detergen & Pewangi</td>
+                        <td class="py-1.5 px-1 text-right">Rp {{ number_format($expenses['detergen'], 0, ',', '.') }}</td>
+                        <td class="py-1.5 px-1 text-right"></td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="py-1.5 px-4 text-gray-700">Beban Pembelian & Servis Peralatan</td>
+                        <td class="py-1.5 px-1 text-right">Rp {{ number_format($expenses['peralatan'], 0, ',', '.') }}</td>
+                        <td class="py-1.5 px-1 text-right"></td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="py-1.5 px-4 text-gray-700">Beban Operasional Lain-lain</td>
+                        <td class="py-1.5 px-1 text-right">Rp {{ number_format($expenses['operasional'], 0, ',', '.') }}</td>
+                        <td class="py-1.5 px-1 text-right"></td>
+                    </tr>
+                    <tr class="border-b border-gray-250">
+                        <td class="py-1.5 px-4 text-gray-700">Beban Non-Operasional / Lainnya</td>
+                        <td class="py-1.5 px-1 text-right">Rp {{ number_format($expenses['lainnya'], 0, ',', '.') }}</td>
+                        <td class="py-1.5 px-1 text-right"></td>
+                    </tr>
+                    <tr class="font-bold border-b border-gray-400 bg-gray-50/40 text-gray-950">
+                        <td class="py-2 px-1 uppercase pl-4">Total Beban Operasional (B)</td>
+                        <td class="py-2 px-1 text-right"></td>
+                        <td class="py-2 px-1 text-right text-red-650">Rp {{ number_format($totalExpense, 0, ',', '.') }}</td>
+                    </tr>
+
+                    <!-- Laba Bersih -->
+                    <tr class="font-bold bg-gray-50 text-gray-950">
+                        <td class="py-2.5 px-1 uppercase">LABA (RUGI) BERSIH OPERASIONAL (A - B)</td>
+                        <td class="py-2.5 px-1 text-right"></td>
+                        <td class="py-2.5 px-1 text-right text-green-600 border-b-4 border-double border-gray-800">
+                            Rp {{ number_format($profit, 0, ',', '.') }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Halaman 3: Laporan Arus Kas & Tanda Tangan -->
+    <div class="print-page page-break-before">
+        <div class="mb-8 print-section">
+            <h3 class="text-xs font-bold uppercase tracking-wider border-b border-gray-800 pb-1 mb-3">III. LAPORAN ARUS KAS (STATEMENT OF CASH FLOWS)</h3>
+            <table class="w-full text-xs text-left border-collapse table-layout-fixed">
+                <thead>
+                    <tr class="border-b-2 border-gray-850 font-bold bg-gray-50 text-gray-800">
+                        <th class="py-2 px-1 border-b border-gray-300 w-1/2">Aktivitas Arus Kas (Metode Langsung)</th>
+                        <th class="py-2 px-1 text-right border-b border-gray-300 w-1/4">Rincian (IDR)</th>
+                        <th class="py-2 px-1 text-right border-b border-gray-300 w-1/4">Jumlah (IDR)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Kas Masuk -->
+                    <tr class="font-bold text-gray-900 bg-gray-50/20">
+                        <td class="py-2 px-1 uppercase" colspan="3">1. ARUS KAS MASUK (CASH INFLOWS)</td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="py-1.5 px-4 text-gray-700">Penerimaan Kas - Tunai (Cash)</td>
+                        <td class="py-1.5 px-1 text-right">Rp {{ number_format($cashInflow, 0, ',', '.') }}</td>
+                        <td class="py-1.5 px-1 text-right"></td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="py-1.5 px-4 text-gray-700">Penerimaan Kas - Transfer Bank</td>
+                        <td class="py-1.5 px-1 text-right">Rp {{ number_format($transferInflow, 0, ',', '.') }}</td>
+                        <td class="py-1.5 px-1 text-right"></td>
+                    </tr>
+                    <tr class="border-b border-gray-200">
+                        <td class="py-1.5 px-4 text-gray-700">Penerimaan Kas - Dompet Digital (E-Wallet / QRIS)</td>
+                        <td class="py-1.5 px-1 text-right">Rp {{ number_format($ewalletInflow, 0, ',', '.') }}</td>
+                        <td class="py-1.5 px-1 text-right"></td>
+                    </tr>
+                    <tr class="font-bold border-b border-gray-350 bg-gray-50/30 text-gray-900">
+                        <td class="py-2 px-1 uppercase pl-4">Total Arus Kas Masuk</td>
+                        <td class="py-2 px-1 text-right"></td>
+                        <td class="py-2 px-1 text-right">Rp {{ number_format($cashInflow + $transferInflow + $ewalletInflow, 0, ',', '.') }}</td>
+                    </tr>
+
+                    <!-- Kas Keluar -->
+                    <tr class="font-bold text-gray-900 bg-gray-50/20">
+                        <td class="py-2 px-1 uppercase pt-4" colspan="3">2. ARUS KAS KELUAR (CASH OUTFLOWS)</td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="py-1.5 px-4 text-gray-700">Pembayaran Kas - Tunai (Cash)</td>
+                        <td class="py-1.5 px-1 text-right">Rp {{ number_format($cashOutflow, 0, ',', '.') }}</td>
+                        <td class="py-1.5 px-1 text-right"></td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="py-1.5 px-4 text-gray-700">Pembayaran Kas - Transfer Bank</td>
+                        <td class="py-1.5 px-1 text-right">Rp {{ number_format($transferOutflow, 0, ',', '.') }}</td>
+                        <td class="py-1.5 px-1 text-right"></td>
+                    </tr>
+                    <tr class="border-b border-gray-200">
+                        <td class="py-1.5 px-4 text-gray-700">Pembayaran Kas - Dompet Digital (E-Wallet / QRIS)</td>
+                        <td class="py-1.5 px-1 text-right">Rp {{ number_format($ewalletOutflow, 0, ',', '.') }}</td>
+                        <td class="py-1.5 px-1 text-right"></td>
+                    </tr>
+                    <tr class="font-bold border-b border-gray-350 bg-gray-50/30 text-gray-900">
+                        <td class="py-2 px-1 uppercase pl-4">Total Arus Kas Keluar</td>
+                        <td class="py-2 px-1 text-right"></td>
+                        <td class="py-2 px-1 text-right text-red-650">Rp {{ number_format($cashOutflow + $transferOutflow + $ewalletOutflow, 0, ',', '.') }}</td>
+                    </tr>
+
+                    <!-- Kenaikan Bersih Kas -->
+                    @php
+                        $netCashFlow = ($cashInflow + $transferInflow + $ewalletInflow) - ($cashOutflow + $transferOutflow + $ewalletOutflow);
+                    @endphp
+                    <tr class="font-bold bg-gray-50 text-gray-955">
+                        <td class="py-2.5 px-1 uppercase">KENAIKAN (PENURUNAN) BERSIH KAS</td>
+                        <td class="py-2.5 px-1 text-right"></td>
+                        <td class="py-2.5 px-1 text-right text-green-600 border-b-4 border-double border-gray-800">
+                            Rp {{ number_format($netCashFlow, 0, ',', '.') }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Tanda Tangan & Persetujuan -->
+        <div class="mt-12 grid grid-cols-2 gap-8 text-xs text-gray-800">
+            <div class="text-center">
+                <p>Dibuat oleh,</p>
+                <div class="h-16"></div>
+                <p class="font-bold underline">{{ auth()->user()->name }}</p>
+                <p class="text-[10px] text-gray-500 capitalize">{{ auth()->user()->role }}</p>
+            </div>
+            <div class="text-center">
+                <p>Disetujui oleh,</p>
+                <div class="h-16"></div>
+                <p class="font-bold underline">___________________________</p>
+                <p class="text-[10px] text-gray-500">Pemilik Bisnis (Owner)</p>
+            </div>
+        </div>
+
+        <!-- Footer Dokumen Formal -->
+        <div class="text-[9px] text-gray-400 text-center mt-12 border-t pt-2">
+            Dokumen Laporan Keuangan Bulanan Lestari Laundry & Kost - Dicetak secara otomatis oleh sistem pada {{ date('d M Y, H:i') }}
+        </div>
+    </div>
+</div>
+
 <style>
     @media print {
-        /* Bypass Alpine.js styling and print all sections sequentially by default */
-        .tab-content-item {
+        /* If printing the FULL report (default body, no print-only-target class) */
+        body:not(.print-only-target) .print-report-container {
             display: block !important;
-            opacity: 1 !important;
-            visibility: visible !important;
-            page-break-after: always;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
         }
-        .tab-content-item:last-child {
-            page-break-after: avoid;
+        body:not(.print-only-target) .md\:flex-shrink-0,
+        body:not(.print-only-target) .md\:hidden,
+        body:not(.print-only-target) header,
+        body:not(.print-only-target) footer,
+        body:not(.print-only-target) .print\:hidden,
+        body:not(.print-only-target) main > div:not(.print-report-container) {
+            display: none !important;
         }
-        
-        /* Single section printing override */
+
+        /* If printing a SINGLE target section (body has print-only-target class) */
+        body.print-only-target .print-report-container {
+            display: none !important;
+        }
         body.print-only-target .print-document-header {
             display: none !important;
         }
+        body.print-only-target .md\:flex-shrink-0,
+        body.print-only-target .md\:hidden,
+        body.print-only-target header,
+        body.print-only-target footer,
         body.print-only-target .tab-content-item:not(.print-target-element) {
             display: none !important;
         }
@@ -477,14 +745,77 @@
             border: none !important;
             box-shadow: none !important;
             padding: 0 !important;
+            background: transparent !important;
         }
-        
+
+        /* Common resets for both print modes to allow page flow */
+        html, body, 
+        .h-screen, 
+        .overflow-hidden, 
+        .overflow-y-auto, 
+        .flex, 
+        .flex-col, 
+        .flex-1 {
+            height: auto !important;
+            overflow: visible !important;
+            display: block !important;
+            position: static !important;
+        }
+
+        @page {
+            size: A4;
+            margin: 1.5cm;
+        }
+
         body {
             background-color: white !important;
-            color: black !important;
+            color: #111827 !important;
+            font-size: 11pt;
         }
+
         main {
             padding: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+        }
+
+        /* Force light mode backgrounds on printed cards / elements */
+        *, *::before, *::after {
+            background-color: transparent !important;
+            box-shadow: none !important;
+            text-shadow: none !important;
+        }
+
+        /* Keep colors for text statuses */
+        .text-green-600, .text-green-700 {
+            color: #16a34a !important;
+        }
+        .text-red-655, .text-red-600, .text-red-700 {
+            color: #dc2626 !important;
+        }
+        .text-blue-400, .text-blue-600, .text-blue-800 {
+            color: #2563eb !important;
+        }
+        .text-indigo-600 {
+            color: #4f46e5 !important;
+        }
+
+        /* Border adjustments for printable cards */
+        .border, .border-2, .border-t, .border-b, .border-l, .border-r {
+            border-color: #e5e7eb !important;
+        }
+
+        /* Print formatting helper utilities */
+        .print-page {
+            display: block !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            clear: both;
+        }
+        
+        .page-break-before {
+            page-break-before: always !important;
+            break-before: page !important;
         }
     }
 </style>

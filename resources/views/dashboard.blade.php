@@ -333,7 +333,22 @@
                                 <div class="bg-gray-50 dark:bg-gray-900/30 border border-gray-100 dark:border-gray-800 rounded-2xl p-5 shadow-sm space-y-4 hover:shadow transition-all duration-200">
                                     <div class="flex justify-between items-start">
                                         <div>
-                                            <span class="text-xs font-bold text-blue-650 dark:text-blue-400 tracking-wide bg-blue-50 dark:bg-blue-900/20 px-2.5 py-1 rounded-xl">{{ $order->order_number }}</span>
+                                            <div class="flex items-center gap-2 flex-wrap">
+                                                <span class="text-xs font-bold text-blue-655 dark:text-blue-400 tracking-wide bg-blue-50 dark:bg-blue-900/20 px-2.5 py-1 rounded-xl">{{ $order->order_number }}</span>
+                                                @if($order->status === 'pending')
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-850 dark:bg-gray-700 dark:text-gray-300">
+                                                        Pending
+                                                    </span>
+                                                @elseif($order->status === 'sedang_diambil')
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-yellow-100 text-yellow-850 dark:bg-yellow-900/40 dark:text-yellow-300">
+                                                        Sedang Diambil
+                                                    </span>
+                                                @else
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-850 dark:bg-blue-900/40 dark:text-blue-300">
+                                                        Baru
+                                                    </span>
+                                                @endif
+                                            </div>
                                             <h4 class="font-bold text-gray-800 dark:text-white mt-3">{{ $order->customer->name }}</h4>
                                             <span class="text-xs text-gray-500 dark:text-gray-400 block mt-0.5">{{ $order->customer->phone }}</span>
                                         </div>
@@ -367,14 +382,36 @@
                                                 <span class="countdown-text">--:--:--</span>
                                             </span>
                                         </div>
-                                        <form method="POST" action="{{ route('laundry.orders.updateStatus', $order) }}">
-                                            @csrf
-                                            @method('PATCH')
-                                            <input type="hidden" name="status" value="proses">
-                                            <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition-all shadow hover:shadow-blue-500/20 flex items-center gap-1.5">
-                                                <i data-lucide="play" class="h-3.5 w-3.5"></i> Mulai Proses
-                                            </button>
-                                        </form>
+                                        <div class="inline-flex gap-2">
+                                            @if($order->status === 'pending')
+                                                <form method="POST" action="{{ route('laundry.orders.updateStatus', $order) }}">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <input type="hidden" name="status" value="sedang_diambil">
+                                                    <button type="submit" class="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white font-bold text-xs rounded-xl transition-all shadow hover:shadow-yellow-500/20 flex items-center gap-1.5" title="Mulai Penjemputan">
+                                                        <i data-lucide="truck" class="h-3.5 w-3.5"></i> Jemput Cucian
+                                                    </button>
+                                                </form>
+                                            @elseif($order->status === 'sedang_diambil')
+                                                <form method="POST" action="{{ route('laundry.orders.updateStatus', $order) }}">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <input type="hidden" name="status" value="baru">
+                                                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition-all shadow hover:shadow-blue-500/20 flex items-center gap-1.5" title="Selesai Dijemput (Tiba di Toko)">
+                                                        <i data-lucide="archive-restore" class="h-3.5 w-3.5"></i> Tiba di Toko
+                                                    </button>
+                                                </form>
+                                            @elseif($order->status === 'baru')
+                                                <form method="POST" action="{{ route('laundry.orders.updateStatus', $order) }}">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <input type="hidden" name="status" value="proses">
+                                                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition-all shadow hover:shadow-blue-500/20 flex items-center gap-1.5">
+                                                        <i data-lucide="play" class="h-3.5 w-3.5"></i> Mulai Proses
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
                             @endforeach
@@ -459,7 +496,18 @@
                                 <div class="bg-gray-50 dark:bg-gray-900/30 border border-gray-100 dark:border-gray-800 rounded-2xl p-5 shadow-sm space-y-4 hover:shadow transition-all duration-200">
                                     <div class="flex justify-between items-start">
                                         <div>
-                                            <span class="text-xs font-bold text-green-600 dark:text-green-400 tracking-wide bg-green-50 dark:bg-green-900/20 px-2.5 py-1 rounded-xl">{{ $order->order_number }}</span>
+                                            <div class="flex items-center gap-2 flex-wrap">
+                                                <span class="text-xs font-bold text-green-600 dark:text-green-400 tracking-wide bg-green-50 dark:bg-green-900/20 px-2.5 py-1 rounded-xl">{{ $order->order_number }}</span>
+                                                @if($order->status === 'sedang_dikirim')
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-100 text-indigo-850 dark:bg-indigo-900/40 dark:text-indigo-300">
+                                                        Sedang Dikirim
+                                                    </span>
+                                                @else
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 text-green-850 dark:bg-green-900/40 dark:text-green-300">
+                                                        Selesai Cuci
+                                                    </span>
+                                                @endif
+                                            </div>
                                             <h4 class="font-bold text-gray-800 dark:text-white mt-3">{{ $order->customer->name }}</h4>
                                             <span class="text-xs text-gray-500 dark:text-gray-400 block mt-0.5">{{ $order->customer->phone }}</span>
                                         </div>
@@ -502,18 +550,45 @@
                                         <a href="{{ route('laundry.orders.show', $order) }}" class="text-xs text-blue-600 hover:underline dark:text-blue-400 flex items-center gap-1 font-semibold">
                                             <i data-lucide="eye" class="h-4 w-4"></i> Rincian Order
                                         </a>
-                                        @if($order->payment_status === 'lunas')
-                                            <form method="POST" action="{{ route('laundry.orders.updateStatus', $order) }}">
-                                                @csrf
-                                                @method('PATCH')
-                                                <input type="hidden" name="status" value="diambil_diantar">
-                                                <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-all shadow hover:shadow-emerald-500/20 flex items-center gap-1.5">
-                                                    <i data-lucide="check" class="h-3.5 w-3.5"></i> Serah Terima
-                                                </button>
-                                            </form>
-                                        @else
-                                            <span class="text-xs text-gray-400 dark:text-gray-500 italic">Harap lunasi pembayaran</span>
-                                        @endif
+                                        <div class="inline-flex gap-2">
+                                            @php
+                                                $hasDelivery = in_array($order->delivery_type, ['delivery', 'pickup_delivery']);
+                                                $deliveryCompleted = $order->deliveries->where('type', 'delivery')->where('status', 'completed')->isNotEmpty();
+                                            @endphp
+
+                                            @if($order->status === 'sedang_dikirim')
+                                                <form method="POST" action="{{ route('laundry.orders.updateStatus', $order) }}">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <input type="hidden" name="status" value="diambil_diantar">
+                                                    <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold text-xs rounded-xl transition-all shadow hover:shadow-green-500/20 flex items-center gap-1.5" title="Selesai Diantar / Diterima">
+                                                        <i data-lucide="package-check" class="h-3.5 w-3.5"></i> Selesai Diantar
+                                                    </button>
+                                                </form>
+                                            @elseif($order->status === 'selesai' && $hasDelivery && !$deliveryCompleted)
+                                                <form method="POST" action="{{ route('laundry.orders.updateStatus', $order) }}">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <input type="hidden" name="status" value="sedang_dikirim">
+                                                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition-all shadow hover:shadow-indigo-500/20 flex items-center gap-1.5" title="Mulai Pengantaran">
+                                                        <i data-lucide="truck" class="h-3.5 w-3.5"></i> Kirim Cucian
+                                                    </button>
+                                                </form>
+                                            @elseif($order->status === 'selesai' && (!$hasDelivery || $deliveryCompleted))
+                                                @if($order->payment_status === 'lunas')
+                                                    <form method="POST" action="{{ route('laundry.orders.updateStatus', $order) }}">
+                                                        @csrf
+                                                        @method('PATCH')
+                                                        <input type="hidden" name="status" value="diambil_diantar">
+                                                        <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-all shadow hover:shadow-emerald-500/20 flex items-center gap-1.5">
+                                                            <i data-lucide="check" class="h-3.5 w-3.5"></i> Serah Terima
+                                                        </button>
+                                                    </form>
+                                                @else
+                                                    <span class="text-xs text-gray-400 dark:text-gray-500 italic">Harap lunasi pembayaran</span>
+                                                @endif
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
                             @endforeach

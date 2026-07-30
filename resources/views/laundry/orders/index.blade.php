@@ -18,20 +18,29 @@
     </div>
 
     <!-- Status Filter Buttons Grid -->
-    <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
-        <a href="{{ route('laundry.orders.index') }}" class="px-4 py-2.5 text-center text-xs font-semibold rounded-xl border transition-all duration-200 {{ !request('status') ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50' }}">
+    <div class="grid grid-cols-2 sm:grid-cols-8 gap-2">
+        <a href="{{ route('laundry.orders.index') }}" class="px-2 py-2.5 text-center text-xs font-semibold rounded-xl border transition-all duration-200 {{ !request('status') ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50' }}">
             Semua Order
         </a>
-        <a href="{{ route('laundry.orders.index', ['status' => 'baru']) }}" class="px-4 py-2.5 text-center text-xs font-semibold rounded-xl border transition-all duration-200 {{ request('status') === 'baru' ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50' }}">
+        <a href="{{ route('laundry.orders.index', ['status' => 'pending']) }}" class="px-2 py-2.5 text-center text-xs font-semibold rounded-xl border transition-all duration-200 {{ request('status') === 'pending' ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50' }}">
+            Pending
+        </a>
+        <a href="{{ route('laundry.orders.index', ['status' => 'sedang_diambil']) }}" class="px-2 py-2.5 text-center text-xs font-semibold rounded-xl border transition-all duration-200 {{ request('status') === 'sedang_diambil' ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50' }}">
+            Sedang Diambil
+        </a>
+        <a href="{{ route('laundry.orders.index', ['status' => 'baru']) }}" class="px-2 py-2.5 text-center text-xs font-semibold rounded-xl border transition-all duration-200 {{ request('status') === 'baru' ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50' }}">
             Baru
         </a>
-        <a href="{{ route('laundry.orders.index', ['status' => 'proses']) }}" class="px-4 py-2.5 text-center text-xs font-semibold rounded-xl border transition-all duration-200 {{ request('status') === 'proses' ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50' }}">
+        <a href="{{ route('laundry.orders.index', ['status' => 'proses']) }}" class="px-2 py-2.5 text-center text-xs font-semibold rounded-xl border transition-all duration-200 {{ request('status') === 'proses' ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50' }}">
             Diproses
         </a>
-        <a href="{{ route('laundry.orders.index', ['status' => 'selesai']) }}" class="px-4 py-2.5 text-center text-xs font-semibold rounded-xl border transition-all duration-200 {{ request('status') === 'selesai' ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50' }}">
+        <a href="{{ route('laundry.orders.index', ['status' => 'selesai']) }}" class="px-2 py-2.5 text-center text-xs font-semibold rounded-xl border transition-all duration-200 {{ request('status') === 'selesai' ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50' }}">
             Selesai
         </a>
-        <a href="{{ route('laundry.orders.index', ['status' => 'diambil_diantar']) }}" class="px-4 py-2.5 text-center text-xs font-semibold rounded-xl border transition-all duration-200 {{ request('status') === 'diambil_diantar' ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-slate-650 hover:bg-gray-50' }}">
+        <a href="{{ route('laundry.orders.index', ['status' => 'sedang_dikirim']) }}" class="px-2 py-2.5 text-center text-xs font-semibold rounded-xl border transition-all duration-200 {{ request('status') === 'sedang_dikirim' ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50' }}">
+            Sedang Dikirim
+        </a>
+        <a href="{{ route('laundry.orders.index', ['status' => 'diambil_diantar']) }}" class="px-2 py-2.5 text-center text-xs font-semibold rounded-xl border transition-all duration-200 {{ request('status') === 'diambil_diantar' ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-slate-650 hover:bg-gray-50' }}">
             Diambil / Diantar
         </a>
     </div>
@@ -120,9 +129,17 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4">
-                                @if($order->status === 'baru')
+                                @if($order->status === 'pending')
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-850 dark:bg-gray-700 dark:text-gray-300">
+                                        Pending
+                                    </span>
+                                @elseif($order->status === 'baru')
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-850 dark:bg-blue-900/40 dark:text-blue-300">
                                         Baru
+                                    </span>
+                                @elseif($order->status === 'sedang_diambil')
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-850 dark:bg-yellow-900/40 dark:text-yellow-300">
+                                        Sedang Diambil
                                     </span>
                                 @elseif($order->status === 'proses')
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-850 dark:bg-amber-900/40 dark:text-amber-300">
@@ -132,8 +149,12 @@
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-850 dark:bg-green-900/40 dark:text-green-300">
                                         Selesai
                                     </span>
+                                @elseif($order->status === 'sedang_dikirim')
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-850 dark:bg-indigo-900/40 dark:text-indigo-300">
+                                        Sedang Dikirim
+                                    </span>
                                 @else
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-850 dark:bg-gray-700 dark:text-gray-300">
                                         Selesai Diambil
                                     </span>
                                 @endif
@@ -144,13 +165,31 @@
                             <td class="px-6 py-4 text-right">
                                 <div class="inline-flex items-center gap-2">
                                     <!-- Quick Status Update Actions -->
-                                    @if($order->status === 'baru')
+                                    @if($order->status === 'pending')
+                                        <form action="{{ route('laundry.orders.updateStatus', $order) }}" method="POST" class="inline">
+                                            @csrf
+                                            @method('PATCH')
+                                            <input type="hidden" name="status" value="sedang_diambil">
+                                            <button type="submit" class="p-2 bg-yellow-50 hover:bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:hover:bg-yellow-900/50 dark:text-yellow-400 rounded-lg transition-colors" title="Mulai Penjemputan (Pickup)">
+                                                <i data-lucide="truck" class="h-4 w-4"></i>
+                                            </button>
+                                        </form>
+                                    @elseif($order->status === 'baru')
                                         <form action="{{ route('laundry.orders.updateStatus', $order) }}" method="POST" class="inline">
                                             @csrf
                                             @method('PATCH')
                                             <input type="hidden" name="status" value="proses">
                                             <button type="submit" class="p-2 bg-amber-50 hover:bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:hover:bg-amber-900/50 dark:text-amber-400 rounded-lg transition-colors" title="Mulai Proses Cuci">
                                                 <i data-lucide="play" class="h-4 w-4"></i>
+                                            </button>
+                                        </form>
+                                    @elseif($order->status === 'sedang_diambil')
+                                        <form action="{{ route('laundry.orders.updateStatus', $order) }}" method="POST" class="inline">
+                                            @csrf
+                                            @method('PATCH')
+                                            <input type="hidden" name="status" value="baru">
+                                            <button type="submit" class="p-2 bg-blue-50 hover:bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 dark:text-blue-400 rounded-lg transition-colors" title="Selesai Dijemput (Tiba di Toko)">
+                                                <i data-lucide="archive-restore" class="h-4 w-4"></i>
                                             </button>
                                         </form>
                                     @elseif($order->status === 'proses')
@@ -163,11 +202,30 @@
                                             </button>
                                         </form>
                                     @elseif($order->status === 'selesai')
+                                        @if(in_array($order->delivery_type, ['delivery', 'pickup_delivery']))
+                                            <form action="{{ route('laundry.orders.updateStatus', $order) }}" method="POST" class="inline">
+                                                @csrf
+                                                @method('PATCH')
+                                                <input type="hidden" name="status" value="sedang_dikirim">
+                                                <button type="submit" class="p-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 dark:text-indigo-400 rounded-lg transition-colors" title="Mulai Pengantaran (Delivery)">
+                                                    <i data-lucide="truck" class="h-4 w-4"></i>
+                                                </button>
+                                            </form>
+                                        @endif
                                         <form action="{{ route('laundry.orders.updateStatus', $order) }}" method="POST" class="inline">
                                             @csrf
                                             @method('PATCH')
                                             <input type="hidden" name="status" value="diambil_diantar">
-                                            <button type="submit" class="p-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 dark:text-indigo-400 rounded-lg transition-colors" title="Tandai Sudah Diambil / Diantar">
+                                            <button type="submit" class="p-2 bg-green-50 hover:bg-green-100 text-green-600 dark:bg-green-900/30 dark:hover:bg-green-900/50 dark:text-green-400 rounded-lg transition-colors" title="Tandai Sudah Diambil / Diantar">
+                                                <i data-lucide="package-check" class="h-4 w-4"></i>
+                                            </button>
+                                        </form>
+                                    @elseif($order->status === 'sedang_dikirim')
+                                        <form action="{{ route('laundry.orders.updateStatus', $order) }}" method="POST" class="inline">
+                                            @csrf
+                                            @method('PATCH')
+                                            <input type="hidden" name="status" value="diambil_diantar">
+                                            <button type="submit" class="p-2 bg-green-50 hover:bg-green-100 text-green-600 dark:bg-green-900/30 dark:hover:bg-green-900/50 dark:text-green-400 rounded-lg transition-colors" title="Selesai Diantar / Diterima">
                                                 <i data-lucide="package-check" class="h-4 w-4"></i>
                                             </button>
                                         </form>

@@ -54,6 +54,17 @@ class DatabaseSeeder extends Seeder
         Setting::set('fee_express', '5000');
         Setting::set('fee_pickup', '3000');
         Setting::set('fee_delivery', '3000');
+        
+        Setting::set('landing_hero_title', 'Hunian Nyaman & Laundry Terpercaya');
+        Setting::set('landing_hero_subtitle', 'Lestari Kost menyediakan hunian eksklusif yang nyaman, sedangkan Lestari Laundry siap merawat pakaian Anda dengan bersih, rapi, dan cepat.');
+        Setting::set('landing_laundry_title', 'Lestari Laundry');
+        Setting::set('landing_laundry_desc', 'Kami menawarkan berbagai paket laundry premium mulai dari kiloan, satuan, hingga layanan express. Pakaian Anda diproses secara higienis, disetrika rapi, dan diberi pewangi segar.');
+        Setting::set('landing_laundry_features', 'Cuci Setrika Kiloan, Cuci Satuan Premium, Layanan Express 24 Jam, Gratis Antar Jemput');
+        Setting::set('landing_kost_title', 'Lestari Kost');
+        Setting::set('landing_kost_desc', 'Lestari Kost menawarkan kamar sewa bulanan dengan fasilitas lengkap yang menunjang kenyamanan istirahat Anda setelah seharian beraktivitas.');
+        Setting::set('landing_kost_features', 'Kamar Ber-AC, Kamar Mandi Dalam, Free High-Speed Wi-Fi, Akses Gerbang 24 Jam, Keamanan CCTV');
+        Setting::set('landing_whatsapp', '081234567890');
+        Setting::set('landing_instagram', 'lestari.laundry.kost');
 
         // 3. Laundry Services
         $s1 = LaundryService::create([
