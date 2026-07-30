@@ -23,29 +23,35 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // 1. Users & Roles
-        $admin = User::create([
-            'name' => 'Administrator',
-            'username' => 'admin',
-            'email' => 'admin@laundrykost.com',
-            'password' => Hash::make('password'),
-            'role' => 'admin',
-        ]);
+        $admin = User::firstOrCreate(
+            ['username' => 'admin'],
+            [
+                'name' => 'Administrator',
+                'email' => 'admin@laundrykost.com',
+                'password' => Hash::make('password'),
+                'role' => 'admin',
+            ]
+        );
 
-        $owner = User::create([
-            'name' => 'Owner Usaha',
-            'username' => 'owner',
-            'email' => 'owner@laundrykost.com',
-            'password' => Hash::make('password'),
-            'role' => 'owner',
-        ]);
+        $owner = User::firstOrCreate(
+            ['username' => 'owner'],
+            [
+                'name' => 'Owner Usaha',
+                'email' => 'owner@laundrykost.com',
+                'password' => Hash::make('password'),
+                'role' => 'owner',
+            ]
+        );
 
-        $staff = User::create([
-            'name' => 'Staff Laundry',
-            'username' => 'staff',
-            'email' => 'staff@laundrykost.com',
-            'password' => Hash::make('password'),
-            'role' => 'staff',
-        ]);
+        $staff = User::firstOrCreate(
+            ['username' => 'staff'],
+            [
+                'name' => 'Staff Laundry',
+                'email' => 'staff@laundrykost.com',
+                'password' => Hash::make('password'),
+                'role' => 'staff',
+            ]
+        );
 
         // 2. Settings (Key-Value)
         Setting::set('business_name', 'Lestari Laundry & Kost');
@@ -66,13 +72,14 @@ class DatabaseSeeder extends Seeder
         Setting::set('landing_whatsapp', '081234567890');
         Setting::set('landing_instagram', 'lestari.laundry.kost');
 
-        // 3. Laundry Services
-        $s1 = LaundryService::create([
-            'name' => 'Laundry 1 Hari',
-            'price' => 8000.00,
-            'duration_days' => 1,
-            'is_active' => true,
-        ]);
+        // 3. Laundry Services & Demo Data (Only if not seeded yet)
+        if (LaundryService::count() === 0) {
+            $s1 = LaundryService::create([
+                'name' => 'Laundry 1 Hari',
+                'price' => 8000.00,
+                'duration_days' => 1,
+                'is_active' => true,
+            ]);
 
         $s2 = LaundryService::create([
             'name' => 'Laundry 2 Hari',
@@ -417,5 +424,6 @@ class DatabaseSeeder extends Seeder
             'payment_method' => 'cash',
             'notes' => 'Beli hanger plastik 5 lusin',
         ]);
+        }
     }
 }
