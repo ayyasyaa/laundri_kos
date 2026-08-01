@@ -17,7 +17,7 @@ class DashboardController extends Controller
         $today = Carbon::today();
         
         // 1. KPI Cards
-        $totalLaundryToday = LaundryOrder::whereDate('created_at', $today)->count();
+        $totalLaundryToday = LaundryOrder::whereBetween('created_at', [$today->copy()->startOfDay(), $today->copy()->endOfDay()])->count();
         $laundryProcesses = LaundryOrder::where('status', 'proses')->count();
         $laundryCompleted = LaundryOrder::whereIn('status', ['selesai', 'sedang_dikirim'])->count();
         
@@ -49,10 +49,11 @@ class DashboardController extends Controller
             ->get();
 
         // Kost: Tagihan Jatuh Tempo (days remaining <= 7 and status aktif)
-        $dueTenants = Tenant::with('room')
+        // Direct SQL query using end_date instead of loading all tenants into PHP memory
+        $dueTenants = Tenant::with(['room', 'customer'])
             ->where('status', 'aktif')
-            ->get()
-            ->filter(fn($t) => $t->days_remaining <= 7);
+            ->where('end_date', '<=', $today->copy()->addDays(7))
+            ->get();
 
         // Laundry: Pembayaran Belum Lunas
         $unpaidLaundry = LaundryOrder::with('customer')

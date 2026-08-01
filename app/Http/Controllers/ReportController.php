@@ -54,44 +54,41 @@ class ReportController extends Controller
         
         $totalIncome = $laundryRevenue + $kostRevenue + $otherRevenue;
 
-        // Expenses detailed
+        // Expenses detailed (Optimized: 1 query using GROUP BY instead of 6 loop queries)
         $expenseCategories = ['listrik', 'air', 'detergen', 'peralatan', 'operasional', 'lainnya'];
+        $expenseTotals = FinanceTransaction::where('type', 'expense')
+            ->whereBetween('date', [$startDate, $endDate])
+            ->select('category', DB::raw('SUM(amount) as total'))
+            ->groupBy('category')
+            ->pluck('total', 'category');
+
         $expenses = [];
         foreach ($expenseCategories as $cat) {
-            $expenses[$cat] = FinanceTransaction::where('type', 'expense')
-                ->where('category', $cat)
-                ->whereBetween('date', [$startDate, $endDate])
-                ->sum('amount');
+            $expenses[$cat] = (float)($expenseTotals[$cat] ?? 0);
         }
         $totalExpense = array_sum($expenses);
         $profit = $totalIncome - $totalExpense;
 
-        // 4. Financial Statements: Cash Flow (Arus Kas)
-        $cashInflow = FinanceTransaction::where('type', 'income')
-            ->where('payment_method', 'cash')
+        // 4. Financial Statements: Cash Flow (Arus Kas - Optimized: 2 grouped queries instead of 6 separate queries)
+        $inflows = FinanceTransaction::where('type', 'income')
             ->whereBetween('date', [$startDate, $endDate])
-            ->sum('amount');
-        $transferInflow = FinanceTransaction::where('type', 'income')
-            ->where('payment_method', 'transfer')
+            ->select('payment_method', DB::raw('SUM(amount) as total'))
+            ->groupBy('payment_method')
+            ->pluck('total', 'payment_method');
+
+        $cashInflow = (float)($inflows['cash'] ?? 0);
+        $transferInflow = (float)($inflows['transfer'] ?? 0);
+        $ewalletInflow = (float)($inflows['ewallet'] ?? 0);
+
+        $outflows = FinanceTransaction::where('type', 'expense')
             ->whereBetween('date', [$startDate, $endDate])
-            ->sum('amount');
-        $ewalletInflow = FinanceTransaction::where('type', 'income')
-            ->where('payment_method', 'ewallet')
-            ->whereBetween('date', [$startDate, $endDate])
-            ->sum('amount');
-        
-        $cashOutflow = FinanceTransaction::where('type', 'expense')
-            ->where('payment_method', 'cash')
-            ->whereBetween('date', [$startDate, $endDate])
-            ->sum('amount');
-        $transferOutflow = FinanceTransaction::where('type', 'expense')
-            ->where('payment_method', 'transfer')
-            ->whereBetween('date', [$startDate, $endDate])
-            ->sum('amount');
-        $ewalletOutflow = FinanceTransaction::where('type', 'expense')
-            ->where('payment_method', 'ewallet')
-            ->whereBetween('date', [$startDate, $endDate])
-            ->sum('amount');
+            ->select('payment_method', DB::raw('SUM(amount) as total'))
+            ->groupBy('payment_method')
+            ->pluck('total', 'payment_method');
+
+        $cashOutflow = (float)($outflows['cash'] ?? 0);
+        $transferOutflow = (float)($outflows['transfer'] ?? 0);
+        $ewalletOutflow = (float)($outflows['ewallet'] ?? 0);
 
         // 5. Receivables (Piutang)
         $unpaidLaundryOrders = LaundryOrder::with('customer')

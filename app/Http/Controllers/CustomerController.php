@@ -58,7 +58,7 @@ class CustomerController extends Controller
     public function show(Customer $customer)
     {
         $orders = $customer->orders()->latest()->paginate(10);
-        $unpaidTotal = $customer->orders()->whereIn('payment_status', ['belum_bayar', 'dp'])->get()->sum(fn($o) => $o->total_price - $o->paid_amount);
+        $unpaidTotal = (float)$customer->orders()->whereIn('payment_status', ['belum_bayar', 'dp'])->sum(\Illuminate\Support\Facades\DB::raw('total_price - paid_amount'));
         $activeOrdersCount = $customer->orders()->whereIn('status', ['baru', 'proses', 'selesai'])->count();
         
         // Kost Integration
