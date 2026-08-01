@@ -28,7 +28,14 @@ Route::get('/', [LandingPageController::class, 'index'])->name('landing');
         DB::select('SELECT 1');
         return microtime(true) - $start;
     });
+    Route::get('/benchmark', function () {
 
+    $start = microtime(true);
+
+    return response()->json([
+        'elapsed' => microtime(true) - $start,
+    ]);
+});
     Route::get('/php-test', function () {
         $start = microtime(true);
 
