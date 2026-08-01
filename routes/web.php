@@ -20,7 +20,22 @@ Route::get('/portal', [PortalController::class, 'index'])->name('portal.index');
 
 // Public Landing Page
 Route::get('/', [LandingPageController::class, 'index'])->name('landing');
+//test
+    Route::get('/ping', fn() => 'OK');
 
+    Route::get('/db-test', function () {
+        $start = microtime(true);
+        DB::select('SELECT 1');
+        return microtime(true) - $start;
+    });
+
+    Route::get('/php-test', function () {
+        $start = microtime(true);
+
+        for ($i = 0; $i < 1000000; $i++) {}
+
+        return microtime(true) - $start;
+    });
 Route::middleware(['auth'])->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -73,22 +88,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
         Route::post('settings', [SettingController::class, 'update'])->name('settings.update');
     });
-    //test
-    Route::get('/ping', fn() => 'OK');
-
-    Route::get('/db-test', function () {
-        $start = microtime(true);
-        DB::select('SELECT 1');
-        return microtime(true) - $start;
-    });
-
-    Route::get('/php-test', function () {
-        $start = microtime(true);
-
-        for ($i = 0; $i < 1000000; $i++) {}
-
-        return microtime(true) - $start;
-    });
+    
     // Profile Controller
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
